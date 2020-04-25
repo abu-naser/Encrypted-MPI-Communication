@@ -13,16 +13,24 @@ encrypted via AES-GCM (for both 128-bit and 256-bit keys);
 one library is based on MPICH-3.2.1 for Ethernet and the other
 on MVAPICH2-2.3 for InfiniBand. Specifically, encryption is
 added to the following MPI routines:
-• Point-to-point: MPI_Send, MPI_Recv, MPI_ISend,
+* Point-to-point: MPI_Send, MPI_Recv, MPI_ISend,
 MPI_IRecv, MPI_Wait, and MPI_Waitall.
-• Collective:
+* Collective:
 MPI_Allgather,
 MPI_Alltoall,
 MPI_Alltoallv, and MPI_Bcast.
-Our prototypes can
-run on top of any underlying network and main focus of
-this work is to benchmark the performance of encrypted MPI
-libraries
+Our prototypes can run on top of any underlying network and main focus of
+this work is to benchmark the performance of encrypted MPI libraries. Implemented
+secure routines are as follows: 
+
+|  Encryption mode         | Pont-to-point routines|  Collective routines   |
+| -------------            |:---------------------:| ----------------------:|
+| init_boringssl_128       | MPI_SEC_Send          | MPI_SEC_Allgather      |
+| init_boringssl_256       | MPI_SEC_Recv          | MPI_SEC_Alltoall       |
+| init_boringssl_128_siv   | MPI_SEC_Isend         | MPI_SEC_Alltoallv      |
+| init_boringssl_256_siv   | MPI_SEC_Irecv         | MPI_SEC_Bcast          |
+|                          | MPI_SEC_Wait          |                        |
+|                          | MPI_SEC_Waitall       |                        |
 
 ## Related Paper
 [IEEE Cluster 2019, Albuquerque, USA](https://ieeexplore.ieee.org/abstract/document/8891033)
