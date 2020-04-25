@@ -117,7 +117,7 @@ export LD_LIBRARY_PATH=/MPICH_INSTALL_DIR/install/lib:/YOUR_PATH_TO_MPICH/encryp
 ## Performance measurement
 The performance was measured on 40Gb/s Infiniband and 10Gb/s Ethernet network. Benchmark program used:
 - Ping-Pong program
-- OSU micro-benchmark 5.6.2
+- OSU micro-benchmark 5.4.4
 - NAS parallel benchmarks 3.3.1 
 
 
