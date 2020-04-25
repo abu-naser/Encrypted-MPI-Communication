@@ -4,8 +4,8 @@ In this work, we consider incorporating encryption to support
 privacy and integrity in the Message Passing Interface (MPI)
 library, which is widely used in HPC applications. We empirically
 study contemporary cryptographic libraries using micro-benchmarks
-and NAS parallel benchmarks to evaluate their overheads for en-
-crypting MPI messages on two different networking technologies,
+and NAS parallel benchmarks to evaluate their overheads for encrypting
+ MPI messages on two different networking technologies,
 10Gbps Ethernet and 40Gbps InfiniBand.
 
 We developed two MPI libraries whose communication is
