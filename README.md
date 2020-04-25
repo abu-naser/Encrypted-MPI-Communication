@@ -65,7 +65,7 @@ In the *Makefile* add -L/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/boringssl-m
 
 (e.g. LIBS =-L/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/boringssl-master/build/crypto -lcrypto -libmad -lrdmacm -libumad -libverbs -ldl -lrt -lm -lpthread)
 
-And also add -I/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/boringssl-master/include  *CFLAGS*
+And also add -I/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/boringssl-master/include in *CFLAGS*
 
 ```bash
 export LD_LIBRARY_PATH=/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/boringssl-master/build/crypto
@@ -86,7 +86,7 @@ In the *Makefile* add -L/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/boringssl-mast
 
 (e.g. LIBS = -L/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/boringssl-master/build/crypto -lcrypto -lpthread )
 
-And also add -I/YOUR_PATH_TO_MVAPICH/encrypted-mpich-3.2.1/boringssl-master/include  *CFLAGS*
+And also add -I/YOUR_PATH_TO_MVAPICH/encrypted-mpich-3.2.1/boringssl-master/include in *CFLAGS*
  
 ```bash
 export LD_LIBRARY_PATH=/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/boringssl-master/build/crypto
