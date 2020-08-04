@@ -3,10 +3,20 @@
 In this work, we consider incorporating encryption to support
 privacy and integrity in the Message Passing Interface (MPI)
 library, which is widely used in HPC applications. We empirically
-study contemporary cryptographic libraries using micro-benchmarks
-and NAS parallel benchmarks to evaluate their overheads for encrypting
- MPI messages on two different networking technologies,
-10Gbps Ethernet and 40Gbps InfiniBand.
+study four contemporary cryptographic libraries, [OpenSSL](https://www.openssl.org/),
+[BoringSSL](https://boringssl.googlesource.com/boringssl/), [Libsodium](https://libsodium.gitbook.io/doc/), and [CryptoPP](https://www.cryptopp.com/) using micro-benchmarks
+and NAS parallel benchmarks to evaluate their overheads for en-
+crypting MPI messages on two different networking technologies,
+10Gbps Ethernet and 40Gbps InfiniBand. The results indicate
+that (1) the performance differs drastically across cryptographic
+libraries, and (2) effectively supporting privacy and integrity
+in MPI communications on high speed data center networks is
+challenging—even with the most efficient cryptographic library,
+encryption can still introduce very significant overheads in some
+scenarios such as a single MPI communication operation on
+InfiniBand, but (3) the overall overhead may not be prohibitive
+for practical uses since there can be multiple concurrent com-
+munications.
 
 We developed two MPI libraries whose communication is
 encrypted via AES-GCM (for both 128-bit and 256-bit keys);
@@ -21,16 +31,18 @@ MPI_Alltoall,
 MPI_Alltoallv, and MPI_Bcast.
 
 
-Our prototypes can run on top of any underlying network and main focus of
-this work is to benchmark the performance of encrypted MPI libraries. Implemented
+The underlying cryptographic library is user-selectable among
+OpenSSL, BoringSSL, Libsodium, and CryptoPP. With en-
+cryption incorporated at the MPI layer, our prototypes can
+run on top of any underlying network. Implemented
 secure routines are as follows: 
 
-|  Encryption mode         | Pont-to-point routines|  Collective routines   |
+|  Init encryption key     | Pont-to-point routines|  Collective routines   |
 | -------------            |:---------------------:| ----------------------:|
-| init_boringssl_128       | MPI_SEC_Send          | MPI_SEC_Allgather      |
-| init_boringssl_256       | MPI_SEC_Recv          | MPI_SEC_Alltoall       |
-| init_boringssl_128_siv   | MPI_SEC_Isend         | MPI_SEC_Alltoallv      |
-| init_boringssl_256_siv   | MPI_SEC_Irecv         | MPI_SEC_Bcast          |
+| init_crypto              | MPI_SEC_Send          | MPI_SEC_Allgather      |
+|                          | MPI_SEC_Recv          | MPI_SEC_Alltoall       |
+|                          | MPI_SEC_Isend         | MPI_SEC_Alltoallv      |
+|                          | MPI_SEC_Irecv         | MPI_SEC_Bcast          |
 |                          | MPI_SEC_Wait          |                        |
 |                          | MPI_SEC_Waitall       |                        |
 
@@ -55,11 +67,11 @@ export LD_LIBRARY_PATH=/HOME_DIR/automake/lib:$LD_LIBRARY_PATH
 
 #### Encrypted-MVAPICH installation (Infiniband)
 Steps:
+Configure and install with BoringSSL:
 ```bash
-tar -xvzf encrypted-mvapich2-2.3.tar.gz
 cd encrypted-mvapich2-2.3
 ./autogen.sh
-./configure --prefix=/MVAPICH_INSTALL_DIR/install  
+./configure --prefix=/MVAPICH_INSTALL_DIR/install  --with-enc-lib=libboringssl
 ```
 In the *Makefile* add -L/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/boringssl-master/build/crypto -lcrypto in *LIBS*
 
@@ -73,6 +85,63 @@ make clean
 make -j
 make install
 ```
+
+Configure and install with OpenSSL:
+```bash
+cd encrypted-mvapich2-2.3
+./autogen.sh
+./configure --prefix=/MVAPICH_INSTALL_DIR/install  --with-enc-lib=libopenssl
+```
+In the *Makefile* add -L/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/openssl-1.1.1/openssl_install/lib -lcrypto in *LIBS*
+
+(e.g. LIBS =-L/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/openssl-1.1.1/openssl_install/lib -lcrypto -libmad -lrdmacm -libumad -libverbs -ldl -lrt -lm -lpthread)
+
+And also add -I/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/openssl-1.1.1/openssl_install/include in *CFLAGS*
+
+```bash
+export LD_LIBRARY_PATH=/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/openssl-1.1.1/openssl_install/lib
+make clean
+make -j
+make install
+```
+
+Configure and install with Libsodium:
+```bash
+cd encrypted-mvapich2-2.3
+./autogen.sh
+./configure --prefix=/MVAPICH_INSTALL_DIR/install  --with-enc-lib=libsodium
+```
+In the *Makefile* add -L/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/libsodium-stable/libsodium_install/lib -lsodium in *LIBS*
+
+(e.g. LIBS =-L/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/libsodium-stable/libsodium_install/lib -lsodium -libmad -lrdmacm -libumad -libverbs -ldl -lrt -lm -lpthread)
+
+And also add -I/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/libsodium-stable/libsodium_install/include in *CFLAGS*
+
+```bash
+export LD_LIBRARY_PATH=/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/libsodium-stable/libsodium_install/lib
+make clean
+make -j
+make install
+```
+
+Configure and install with CryptoPP:
+```bash
+cd encrypted-mvapich2-2.3
+./autogen.sh
+./configure --prefix=/MVAPICH_INSTALL_DIR/install  --with-enc-lib=libcryptopp
+```
+In the *Makefile* add -L/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/cryptopp/install/lib -lcryptopp in *LIBS*
+
+(e.g. LIBS =-L/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/cryptopp/install/lib -lcryptopp -libmad -lrdmacm -libumad -libverbs -ldl -lrt -lm -lpthread)
+
+```bash
+export LD_LIBRARY_PATH=/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/cryptopp/install/lib
+make clean
+make -j
+make install
+```
+
+
 
 #### Encrypted-MPICH installation (Ethernet)
 Steps: 
