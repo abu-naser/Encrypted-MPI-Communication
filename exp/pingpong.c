@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 
 	/* init key */
         init_crypto(); 		// libsodium
-	init_boringssl_256();    // boringssl
+	//init_boringssl_256();    // boringssl
 
 	memset(sendbuf, 'a', 4194304);
 	memset(recvbuf, 'b', 4194304);
