@@ -4,9 +4,9 @@ In this work, we consider incorporating encryption to support
 privacy and integrity in the Message Passing Interface (MPI)
 library, which is widely used in HPC applications. We empirically
 study four contemporary cryptographic libraries, [OpenSSL](https://www.openssl.org/),
-[BoringSSL](https://boringssl.googlesource.com/boringssl/), [Libsodium](https://libsodium.gitbook.io/doc/), and [CryptoPP](https://www.cryptopp.com/) using micro-benchmarks
-and NAS parallel benchmarks to evaluate their overheads for en-
-crypting MPI messages on two different networking technologies,
+[BoringSSL](https://boringssl.googlesource.com/boringssl/), [Libsodium](https://libsodium.gitbook.io/doc/), and [CryptoPP](https://www.cryptopp.com/) using [micro-benchmarks](http://mvapich.cse.ohio-state.edu/benchmarks/)
+and [NAS parallel benchmarks](https://www.nas.nasa.gov/publications/npb.html) to evaluate their overheads for encrypting
+ MPI messages on two different networking technologies,
 10Gbps Ethernet and 40Gbps InfiniBand. The results indicate
 that (1) the performance differs drastically across cryptographic
 libraries, and (2) effectively supporting privacy and integrity
@@ -15,8 +15,7 @@ challenging—even with the most efficient cryptographic library,
 encryption can still introduce very significant overheads in some
 scenarios such as a single MPI communication operation on
 InfiniBand, but (3) the overall overhead may not be prohibitive
-for practical uses since there can be multiple concurrent com-
-munications.
+for practical uses since there can be multiple concurrent communications.
 
 We developed two MPI libraries whose communication is
 encrypted via AES-GCM (for both 128-bit and 256-bit keys);
@@ -32,8 +31,7 @@ MPI_Alltoallv, and MPI_Bcast.
 
 
 The underlying cryptographic library is user-selectable among
-OpenSSL, BoringSSL, Libsodium, and CryptoPP. With en-
-cryption incorporated at the MPI layer, our prototypes can
+OpenSSL, BoringSSL, Libsodium, and CryptoPP. With encryption incorporated at the MPI layer, our prototypes can
 run on top of any underlying network. Implemented
 secure routines are as follows: 
 
