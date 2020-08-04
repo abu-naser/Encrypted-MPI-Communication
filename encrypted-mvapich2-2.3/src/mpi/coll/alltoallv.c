@@ -17,14 +17,14 @@
  */
 
 #include "mpiimpl.h"
-#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
+#if ( BORINGSSL_LIB)
 unsigned char alltoallv_ciphertext_sendbuf[268435456+4000]; // 268435456 = 4MB * 64
 unsigned char alltoallv_ciphertext_recvbuf[268435456+4000]; // 268435456 = 4MB * 64
 int cipher_send_dis[50000], cipher_recv_dis[50000];
 int cipher_sendcounts[50000], cipher_recvcounts[50000];
-#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
-#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
-#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#elif ( OPENSSL_LIB)
+#elif ( LIBSODIUM_LIB)
+#elif ( CRYPTOPP_LIB)
 #endif
 
 /* -- Begin Profiling Symbol Block for routine MPI_Alltoallv */
@@ -637,7 +637,7 @@ int MPI_Alltoallv(const void *sendbuf, const int *sendcounts,
     /* --END ERROR HANDLING-- */
 }
 
-#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
+#if ( BORINGSSL_LIB)
 /* variable nonce */
 int MPI_SEC_Alltoallv(const void *sendbuf, const int *sendcounts,
                   const int *sdispls, MPI_Datatype sendtype, void *recvbuf,
@@ -734,7 +734,7 @@ unsigned int i;
     }                       
     return mpi_errno;
 }
-#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
-#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
-#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#elif ( OPENSSL_LIB)
+#elif ( LIBSODIUM_LIB)
+#elif ( CRYPTOPP_LIB)
 #endif

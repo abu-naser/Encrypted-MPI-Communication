@@ -6,12 +6,12 @@
  */
 
 #include "mpiimpl.h"
-#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
+#if ( BORINGSSL_LIB)
 unsigned char deciphertext[4194304+18];
-#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
-#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
+#elif ( OPENSSL_LIB)
+#elif ( LIBSODIUM_LIB)
 unsigned char deciphertext[4194304+18];
-#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#elif ( CRYPTOPP_LIB)
 #endif
 
 /* -- Begin Profiling Symbol Block for routine MPI_Recv */
@@ -213,7 +213,7 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
     /* --END ERROR HANDLING-- */
 }
 
-#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
+#if ( BORINGSSL_LIB)
 /* Variable nonce */
 int MPI_SEC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 	     MPI_Comm comm, MPI_Status *status)
@@ -243,8 +243,8 @@ int MPI_SEC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int ta
            
     return mpi_errno;
 }
-#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
-#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
+#elif ( OPENSSL_LIB)
+#elif ( LIBSODIUM_LIB)
 /* This implementation used a variable nonce */
 int MPI_SEC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
          MPI_Comm comm, MPI_Status *status)
@@ -271,7 +271,7 @@ int MPI_SEC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int ta
 
     return mpi_errno;
 }
-#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#elif ( CRYPTOPP_LIB)
 #endif
 
 

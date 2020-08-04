@@ -19,7 +19,7 @@
 
 #include "mpiimpl.h"
 
-#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
+#if BORINGSSL_LIB
 #include <openssl/evp.h>
 #include <openssl/aes.h>
 #include <openssl/err.h>
@@ -30,14 +30,14 @@ unsigned char key [32] = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n
 unsigned char nonce[12] = {'1','2','3','4','5','6','7','8','9','0','1','2'};  
 int nonceCounter; 
 
-#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
+#elif OPENSSL_LIB
 
-#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
+#elif LIBSODIUM_LIB
 CRYPTO_ALIGN(16) crypto_aead_aes256gcm_state ctx;
 unsigned char key [32] = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','a','b','c','d','e','f'};
 unsigned char send_ciphertext[4194304+18];
 int nonceCounter;
-#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#elif CRYPTOPP_LIB
 #endif
 
 
@@ -223,7 +223,7 @@ int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int ta
 }
 
 
-#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
+#if BORINGSSL_LIB
 /* variable nonce implementation */
 int MPI_SEC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
 	     MPI_Comm comm)
@@ -260,8 +260,8 @@ int MPI_SEC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, in
 
     return mpi_errno;
 }
-#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
-#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
+#elif OPENSSL_LIB
+#elif LIBSODIUM_LIB
 /* This implementation will use unique nonce for each message */
 int MPI_SEC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
 {
@@ -312,7 +312,7 @@ return mpi_errno;
 }
 
 
-#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#elif CRYPTOPP_LIB
 #endif
 
 /* Fixed nonce implementation */
@@ -343,7 +343,7 @@ int MPI_SEC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, in
 #endif
 
 
-#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
+#if BORINGSSL_LIB
 void init_crypto(){
     nonceCounter=0;
     ctx = EVP_AEAD_CTX_new(EVP_aead_aes_256_gcm_siv(),
@@ -400,8 +400,8 @@ void init_boringssl_256(){
 	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 	return;                        
 }
-#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
-#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
+#elif OPENSSL_LIB
+#elif LIBSODIUM_LIB
 /* Initializaiton of lib sodium */
 void init_crypto(){
     int var= sodium_init();
@@ -409,7 +409,7 @@ void init_crypto(){
     var = crypto_aead_aes256gcm_beforenm(&ctx, key);
     return;
 }
-#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#elif CRYPTOPP_LIB
 #endif
 
 /*End of adding */

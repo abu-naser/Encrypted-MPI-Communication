@@ -22,13 +22,13 @@
  * For detailed copyright and licensing information, please refer to the
  * copyright file COPYRIGHT in the top level MVAPICH2 directory.
  */
-#define ENC_LIBRARY_NAME 2 //ENC_LIBRARY_TYPE
-#define BORINGSSL_LIB 0   
-#define OPENSSL_LIB   1
-#define LIBSODIUM_LIB 2
-#define CRYPTOPP_LIB  3
+//#define ENC_LIBRARY_NAME 2 //ENC_LIBRARY_TYPE
+#define BORINGSSL_LIB 0 //BORING_LIB   
+#define OPENSSL_LIB   0 //OPEN_LIB
+#define LIBSODIUM_LIB 1 //SOIDUM_LIB
+#define CRYPTOPP_LIB  0 //CRYPTO_LIB
 
-#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
+#if BORINGSSL_LIB
 #include <openssl/evp.h>
 #include <openssl/aes.h>
 #include <openssl/err.h>
@@ -47,8 +47,8 @@ extern int reqCounter;
 extern int waitCounter; 
 extern int nonceCounter;
 
-#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
-#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
+#elif OPENSSL_LIB
+#elif LIBSODIUM_LIB
 #include <sodium.h> 
 #define NON_BLOCKING_SEND_RECV_SIZE 500 
 #define NON_BLOCKING_SEND_RECV_SIZE_2  2100000
@@ -62,7 +62,7 @@ extern int waitCounter;
 extern int isendCounter;
 // to generate nonce
 extern int nonceCounter; 
-#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#elif  CRYPTOPP_LIB
 #endif
 
 

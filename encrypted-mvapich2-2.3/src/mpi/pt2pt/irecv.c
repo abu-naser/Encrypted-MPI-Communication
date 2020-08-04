@@ -7,13 +7,13 @@
 
 #include "mpiimpl.h"
 
-#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
+#if ( BORINGSSL_LIB)
 unsigned char Ideciphertext[NON_BLOCKING_SEND_RECV_SIZE][NON_BLOCKING_SEND_RECV_SIZE_2];
 unsigned char * bufptr[100000];
 int reqCounter = 0;
-#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
-#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
-#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#elif ( OPENSSL_LIB)
+#elif ( LIBSODIUM_LIB)
+#elif ( CRYPTOPP_LIB)
 #endif
 
 /* -- Begin Profiling Symbol Block for routine MPI_Irecv */
@@ -168,7 +168,7 @@ int MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
     /* --END ERROR HANDLING-- */
 }
 
-#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
+#if ( BORINGSSL_LIB)
 /* variable nonce */
 /* variable nonce */
 int MPI_SEC_Irecv(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Request *request)
@@ -194,9 +194,9 @@ int MPI_SEC_Irecv(void *buf, int count, MPI_Datatype datatype, int source, int t
 return mpi_errno;
 
 }
-#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
-#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
-#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#elif ( OPENSSL_LIB)
+#elif ( LIBSODIUM_LIB)
+#elif ( CRYPTOPP_LIB)
 #endif
 
 /* fixed nonce */
