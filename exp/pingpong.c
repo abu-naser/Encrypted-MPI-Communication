@@ -40,6 +40,10 @@ int main(int argc, char **argv)
 	sendbuf = (char *)malloc(sz * sizeof(char));
 	recvbuf = (char *)malloc(sz * sizeof(char));
 
+	/* init key */
+        init_crypto(); 		// libsodium
+	init_boringssl_256()    // boringssl
+
 	memset(sendbuf, 'a', 4194304);
 	memset(recvbuf, 'b', 4194304);
 
@@ -72,13 +76,13 @@ int main(int argc, char **argv)
 			}
 			if (world_rank == 0)
 			{
-				MPI_Send(sendbuf, datasz, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
-				MPI_Recv(recvbuf, datasz, MPI_CHAR, 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+				MPI_SEC_Send(sendbuf, datasz, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
+				MPI_SEC_Recv(recvbuf, datasz, MPI_CHAR, 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 			}
 			else if (world_rank == 1)
 			{
-				MPI_Recv(recvbuf, datasz, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-				MPI_Send(sendbuf, datasz, MPI_CHAR, 0, 1, MPI_COMM_WORLD);
+				MPI_SEC_Recv(recvbuf, datasz, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+				MPI_SEC_Send(sendbuf, datasz, MPI_CHAR, 0, 1, MPI_COMM_WORLD);
 			}
 		}
 		t_end = MPI_Wtime();
