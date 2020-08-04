@@ -427,6 +427,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
     /* --END ERROR HANDLING-- */
 }
 
+/* Added by Abu Naser */
 #if ( BORINGSSL_LIB)
 /* Variable nonce */
 

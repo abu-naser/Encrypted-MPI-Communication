@@ -17,6 +17,7 @@
  */
 
 #include "mpiimpl.h"
+/* Added by Abu Naser */
 #if ( BORINGSSL_LIB)
 unsigned char alltoallv_ciphertext_sendbuf[268435456+4000]; // 268435456 = 4MB * 64
 unsigned char alltoallv_ciphertext_recvbuf[268435456+4000]; // 268435456 = 4MB * 64

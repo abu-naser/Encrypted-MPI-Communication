@@ -230,7 +230,7 @@ int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int ta
     /* --END ERROR HANDLING-- */
 }
 
-
+/* Added by Abu Naser */
 #if BORINGSSL_LIB
 /* variable nonce implementation */
 int MPI_SEC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,

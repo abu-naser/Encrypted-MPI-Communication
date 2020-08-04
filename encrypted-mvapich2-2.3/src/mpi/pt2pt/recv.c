@@ -217,7 +217,7 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
+/* Added by Abu Naser */
 #if ( BORINGSSL_LIB)
 /* Variable nonce */
 int MPI_SEC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,

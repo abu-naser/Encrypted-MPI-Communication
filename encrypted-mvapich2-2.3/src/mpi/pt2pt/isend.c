@@ -181,6 +181,7 @@ int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
     /* --END ERROR HANDLING-- */
 }
 
+/* Added by Abu Naser */
 #if ( BORINGSSL_LIB)
 /*Variable nonce*/
 int MPI_SEC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request)

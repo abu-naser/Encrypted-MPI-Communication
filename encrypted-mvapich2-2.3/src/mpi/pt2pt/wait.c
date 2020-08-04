@@ -242,6 +242,8 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
+
+/* Added by Abu Naser */
 #if ( BORINGSSL_LIB)
 
 int MPI_SEC_Wait(MPI_Request *request, MPI_Status *status){

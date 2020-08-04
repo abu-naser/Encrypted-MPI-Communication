@@ -22,7 +22,9 @@
  * For detailed copyright and licensing information, please refer to the
  * copyright file COPYRIGHT in the top level MVAPICH2 directory.
  */
-//#define ENC_LIBRARY_NAME 2 //ENC_LIBRARY_TYPE
+
+
+/* Added by Abu Naser */
 #define BORINGSSL_LIB BORING_LIB   
 #define OPENSSL_LIB   OPEN_LIB
 #define LIBSODIUM_LIB SOIDUM_LIB
@@ -103,7 +105,7 @@ extern int isendCounter;
 extern int nonceCounter;  
 extern unsigned long key_size;   
 #endif
-
+/* End of add Abu Naser */
 
 #ifndef MPIIMPL_H_INCLUDED
 #define MPIIMPL_H_INCLUDED

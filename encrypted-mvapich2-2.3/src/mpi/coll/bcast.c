@@ -18,6 +18,7 @@
  */
 
 #include "mpiimpl.h"
+/* Added by Abu Naser */
 #if ( BORINGSSL_LIB)
 unsigned char bcast_ciphertext[268435456+4000]; // 268435456 = 4MB * 64
 unsigned char bcast_deciphertext[268435456+4000]; // 268435456 = 4MB * 64
