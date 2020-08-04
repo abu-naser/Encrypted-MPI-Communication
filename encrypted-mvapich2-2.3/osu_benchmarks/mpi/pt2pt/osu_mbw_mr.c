@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     int po_ret = process_options(argc, argv);
 
     /*do the init first */
-    init_boringssl_128();
+    init_crypto();
 
     if (PO_OKAY == po_ret && NONE != options.accel) {
         if (init_accel()) {
