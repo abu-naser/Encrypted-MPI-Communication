@@ -48,6 +48,30 @@ extern int waitCounter;
 extern int nonceCounter;
 
 #elif OPENSSL_LIB
+#include <openssl/evp.h>
+#include <openssl/aes.h>
+#include <openssl/err.h>
+#include <openssl/bio.h>
+#define NON_BLOCKING_SEND_RECV_SIZE 500 
+#define NON_BLOCKING_SEND_RECV_SIZE_2  2100000
+
+extern unsigned char Ideciphertext[NON_BLOCKING_SEND_RECV_SIZE][NON_BLOCKING_SEND_RECV_SIZE_2];
+extern unsigned int outlen_enc;
+extern int outlen_dec;
+extern int outlen_enc_org;
+extern int outlen_dec_org;
+extern EVP_CIPHER_CTX *ctx_enc;
+extern EVP_CIPHER_CTX *ctx_dec;
+
+//extern unsigned char Ideciphertext[1000][2100000];
+extern unsigned char * bufptr[100000];
+
+// to handle irecv
+extern int reqCounter;
+extern int waitCounter;
+extern int isendCounter;
+// to generate nonce
+extern int nonceCounter; 
 #elif LIBSODIUM_LIB
 #include <sodium.h> 
 #define NON_BLOCKING_SEND_RECV_SIZE 500 

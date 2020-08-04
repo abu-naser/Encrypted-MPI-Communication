@@ -23,6 +23,8 @@
 unsigned char Iciphertext[NON_BLOCKING_SEND_RECV_SIZE][NON_BLOCKING_SEND_RECV_SIZE_2];
 int isendCounter = 0;
 #elif ( OPENSSL_LIB)
+unsigned char Iciphertext[NON_BLOCKING_SEND_RECV_SIZE][NON_BLOCKING_SEND_RECV_SIZE_2];
+int isendCounter = 0;
 #elif ( LIBSODIUM_LIB)
 unsigned char Iciphertext[NON_BLOCKING_SEND_RECV_SIZE][NON_BLOCKING_SEND_RECV_SIZE_2];
 int isendCounter = 0;
@@ -221,6 +223,45 @@ int MPI_SEC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, i
     return mpi_errno;
 }
 #elif ( OPENSSL_LIB)
+/* This implementation is for variable nonce */
+int MPI_SEC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    unsigned long long ciphertext_len; 
+    MPI_Request req;
+    int  sendtype_sz=0;           
+    MPI_Type_size(datatype, &sendtype_sz); 
+		
+	//MPI_Request request[10000];
+	//MPI_Status status_local[10000];
+			
+	char * ciphertext;
+	//int sendtype_sz;
+	unsigned long long next, src;
+	MPI_Type_size(datatype, &sendtype_sz);
+    	
+	unsigned long long blocktype_send= (unsigned long long) sendtype_sz*count;
+    //ciphertext=(char*) MPIU_Malloc((40) + blocktype_send );
+
+	
+
+    openssl_enc_core(&Iciphertext[isendCounter][0],0,buf,0,blocktype_send);
+
+/*int var = crypto_aead_aes256gcm_encrypt_afternm(&Iciphertext[isendCounter][12],&ciphertext_len,
+            buf, count*sendtype_sz,
+            NULL, 0,
+            NULL, &Iciphertext[isendCounter][0], (const crypto_aead_aes256gcm_state *) &ctx);*/
+
+    mpi_errno=MPI_Isend(&Iciphertext[isendCounter][0], (blocktype_send+16+12), MPI_CHAR, dest, tag, comm, &req);
+    * request = req;
+    isendCounter++;
+
+    if(isendCounter == (NON_BLOCKING_SEND_RECV_SIZE-1))
+        isendCounter=0;
+
+    return mpi_errno;
+}
+
 #elif ( LIBSODIUM_LIB)
 /* This implementation is for variable nonce */
 int MPI_SEC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request)

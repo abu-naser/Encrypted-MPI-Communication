@@ -31,7 +31,11 @@ unsigned char nonce[12] = {'1','2','3','4','5','6','7','8','9','0','1','2'};
 int nonceCounter; 
 
 #elif OPENSSL_LIB
-
+unsigned int outlen_enc;
+EVP_CIPHER_CTX *ctx_enc;
+int nonceCounter=0,amount,sct_sz,pre_next;
+const unsigned char gcm_key[32] = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','a','b','c','d','e','f'};
+unsigned char send_ciphertext[4194304+400];
 #elif LIBSODIUM_LIB
 CRYPTO_ALIGN(16) crypto_aead_aes256gcm_state ctx;
 unsigned char key [32] = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','a','b','c','d','e','f'};
@@ -265,6 +269,42 @@ int MPI_SEC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, in
     return mpi_errno;
 }
 #elif OPENSSL_LIB
+void openssl_enc_core(unsigned char *send_ciphertext , unsigned long long src,const void *sendbuf,
+                      unsigned long long dest, unsigned long long blocktype_send){  
+    
+
+	RAND_bytes(send_ciphertext+src, 12);
+    EVP_EncryptInit_ex(ctx_enc, NULL, NULL, NULL, send_ciphertext+src);
+    EVP_EncryptUpdate(ctx_enc, send_ciphertext+src+12, &outlen_enc, sendbuf+dest, blocktype_send);
+    EVP_EncryptFinal_ex(ctx_enc, send_ciphertext+12+src+outlen_enc, &outlen_enc);
+    EVP_CIPHER_CTX_ctrl(ctx_enc, EVP_CTRL_GCM_GET_TAG, 16, send_ciphertext+12+src+blocktype_send);
+
+}
+
+int MPI_SEC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm , int max_pack)
+{
+    int mpi_errno = MPI_SUCCESS;
+	int world_rank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+	int i=0;
+			
+	char * ciphertext;
+	int sendtype_sz;
+	unsigned long long next, src;
+	MPI_Type_size(datatype, &sendtype_sz);
+    	
+	unsigned long long blocktype_send= (unsigned long long) sendtype_sz*count;
+	
+	
+	openssl_enc_core(send_ciphertext,0,buf,0,blocktype_send);
+		
+    // BIO_dump_fp(stdout, ciphertext, count+16);
+	
+	//with IV size 12, tag size 16
+	mpi_errno=MPI_Send(send_ciphertext,blocktype_send+16+12, MPI_CHAR, dest, tag, comm);
+
+	return mpi_errno;
+}
 #elif LIBSODIUM_LIB
 /* This implementation will use unique nonce for each message */
 int MPI_SEC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
@@ -437,6 +477,43 @@ void init_boringssl_256(){
 	return;                        
 }
 #elif OPENSSL_LIB
+void init_openssl_128(){
+   // printf("set the key now\n");fflush(stdout);
+
+    ctx_enc = EVP_CIPHER_CTX_new();
+    EVP_EncryptInit_ex(ctx_enc, EVP_aes_128_gcm(), NULL, gcm_key, NULL);
+    EVP_CIPHER_CTX_ctrl(ctx_enc, EVP_CTRL_GCM_SET_IVLEN, (int)12, NULL);
+
+
+    ctx_dec = EVP_CIPHER_CTX_new();
+    EVP_DecryptInit_ex(ctx_dec, EVP_aes_128_gcm(), NULL, gcm_key, NULL);
+    EVP_CIPHER_CTX_ctrl(ctx_dec, EVP_CTRL_GCM_SET_IVLEN, (int)12, NULL);
+	
+	int world_rank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+	//if (world_rank == 0) printf("\n\t\t****** Secure MPI with OpenSSL  128  GCM ********\n");
+    return;                        
+}
+
+//void init_openssl_256(){
+    void init_crypto(){	
+    //printf("set the key now\n");fflush(stdout);
+
+    ctx_enc = EVP_CIPHER_CTX_new();
+    EVP_EncryptInit_ex(ctx_enc, EVP_aes_256_gcm(), NULL, gcm_key, NULL);
+    EVP_CIPHER_CTX_ctrl(ctx_enc, EVP_CTRL_GCM_SET_IVLEN, (int)12, NULL);
+
+
+    ctx_dec = EVP_CIPHER_CTX_new();
+    EVP_DecryptInit_ex(ctx_dec, EVP_aes_256_gcm(), NULL, gcm_key, NULL);
+    EVP_CIPHER_CTX_ctrl(ctx_dec, EVP_CTRL_GCM_SET_IVLEN, (int)12, NULL);
+	
+	//int world_rank;
+	//MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+	//if (world_rank == 0) printf("\n\t\t****** Secure MPI with OpenSSL  256  GCM ********\n");
+    return;                        
+}
+
 #elif LIBSODIUM_LIB
 /* Initializaiton of lib sodium */
 void init_crypto(){

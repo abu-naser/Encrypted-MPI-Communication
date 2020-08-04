@@ -10,6 +10,8 @@
 unsigned char alltoall_ciphertext_sendbuf[268435456+4000]; // 268435456 = 4MB * 64
 unsigned char alltoall_ciphertext_recvbuf[268435456+4000]; // 268435456 = 4MB * 64
 #elif ( OPENSSL_LIB)
+unsigned char ciphertext_send[268435456+4000]; // 268435456 = 4MB * 64
+unsigned char ciphertext_recv[268435456+4000]; // 268435456 = 4MB * 64
 #elif ( LIBSODIUM_LIB)
 unsigned char alltoall_ciphertext_sendbuf[268435456+4000]; // 268435456 = 4MB * 64
 unsigned char alltoall_ciphertext_recvbuf[268435456+4000]; // 268435456 = 4MB * 64
@@ -827,6 +829,58 @@ int MPI_SEC_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     return mpi_errno;
 }
 #elif ( OPENSSL_LIB)
+int MPI_SEC_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                  void *recvbuf, int recvcount, MPI_Datatype recvtype,  MPI_Comm comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Comm *comm_ptr = NULL;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_BCAST);
+
+	int world_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+	
+	int sendtype_sz, recvtype_sz;
+	
+	MPI_Type_size(sendtype, &sendtype_sz);
+    MPI_Type_size(recvtype, &recvtype_sz);
+	
+	unsigned long long blocktype_send= (unsigned long long) sendtype_sz*sendcount;
+	unsigned long long blocktype_recv= (unsigned long long) recvtype_sz*recvcount;
+    
+    //unsigned char * ciphertext_send;
+	//unsigned char * ciphertext_recv;
+	unsigned long long dest, src;
+	//ciphertext_send=(char*) MPIU_Malloc((blocktype_send+32) * world_size);		
+	//ciphertext_recv=(char*) MPIU_Malloc((blocktype_recv+32) * world_size);	
+	
+	int i;
+	for (i=0; i<world_size ; i++ ){
+
+		dest = (unsigned long long) i*blocktype_send; // Message sent
+		src =(unsigned long long) i*(blocktype_send+16+12); //Real send cipher 
+        //EVP_EncryptUpdate(ctx_enc, send_ciphertext+12+src, &outlen_enc, sendbuf+dest, blocktype_send);
+		openssl_enc_core(ciphertext_send,src,sendbuf,dest,blocktype_send);
+		
+	}
+		
+	MPI_Alltoall(ciphertext_send, (blocktype_send+16+12), MPI_CHAR, ciphertext_recv,blocktype_recv+16+12, MPI_CHAR, comm);
+	//int i;
+	for ( i=0; i<world_size ; i++ ){
+
+		dest = (unsigned int) i*blocktype_recv;
+		src =(unsigned int)i*(blocktype_recv+16+12);
+        //EVP_DecryptUpdate(ctx_dec, recvbuf+dest, &outlen_dec, ciphertext_recv+12+src, (blocktype_recv-12));	
+		openssl_dec_core(ciphertext_recv,src,recvbuf,dest,blocktype_recv+12);	
+	}
+	
+		
+	//MPIU_Free(ciphertext_send);
+	//MPIU_Free(ciphertext_recv);
+	
+	return mpi_errno;
+
+}
 #elif ( LIBSODIUM_LIB)
 /* This implementation is using variable nonce */
 int MPI_SEC_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,

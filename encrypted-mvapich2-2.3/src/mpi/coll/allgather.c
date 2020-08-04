@@ -21,6 +21,8 @@
 unsigned char ciphertext_sendbuf[4194304*2+20];
 unsigned char ciphertext_recvbuf[268435456+4000]; // 268435456 = 4MB * 64
 #elif ( OPENSSL_LIB)
+unsigned char ciphertext_send[4194304*2+20]; // 268435456 = 4MB * 64
+unsigned char ciphertext_recv[268435456+4000]; // 268435456 = 4MB * 64
 #elif ( LIBSODIUM_LIB)
 unsigned char ciphertext_recvbuf[268435456+4000]; // 268435456 = 4MB * 64
 unsigned char ciphertext_sendbuf[268435456+4000]; // 268435456 = 4MB * 64
@@ -1114,6 +1116,51 @@ int MPI_SEC_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     return mpi_errno;
 }
 #elif ( OPENSSL_LIB)
+int MPI_SEC_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                  void *recvbuf, int recvcount, MPI_Datatype recvtype,  MPI_Comm comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Comm *comm_ptr = NULL;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_BCAST);
+	
+	int world_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    unsigned long long dest, src;
+
+	int sendtype_sz, recvtype_sz;
+	
+	MPI_Type_size(sendtype, &sendtype_sz);
+    MPI_Type_size(recvtype, &recvtype_sz);
+
+	
+	int blocktype_send=sendtype_sz*sendcount;
+	int blocktype_recv=recvtype_sz*recvcount;
+	
+	//unsigned char * ciphertext_send;
+	//unsigned char * ciphertext_recv;
+	//ciphertext_send=(char*) MPIU_Malloc(((sendcount*sendtype_sz)+32));
+	//ciphertext_recv=(char*) MPIU_Malloc(((recvcount*recvtype_sz)+32) * world_size);
+	
+    openssl_enc_core(ciphertext_send,0,sendbuf,0,blocktype_send);
+		
+	MPI_Allgather(ciphertext_send, blocktype_send+16+12, MPI_CHAR, ciphertext_recv,blocktype_recv+16+12, MPI_CHAR, comm);
+	
+	int i=0;
+
+	for ( i=0; i<world_size ; i++ ){
+        dest = (unsigned int) i*blocktype_recv;
+        src  = (unsigned int)i*(blocktype_recv+16+12);
+        openssl_dec_core(ciphertext_recv,src,recvbuf,dest,blocktype_recv+12);
+        
+	}
+		
+	//MPIU_Free(ciphertext_send);
+	//MPIU_Free(ciphertext_recv);
+	
+	return mpi_errno;
+
+}
 #elif ( LIBSODIUM_LIB)
 /* This implementation is for variable nonce */
 int MPI_SEC_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,

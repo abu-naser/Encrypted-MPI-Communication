@@ -10,6 +10,7 @@
 #if ( BORINGSSL_LIB)
 int waitCounter = 0;
 #elif ( OPENSSL_LIB)
+int waitCounter = 0;
 #elif ( LIBSODIUM_LIB)
 int waitCounter = 0;
 #elif ( CRYPTOPP_LIB)
@@ -269,6 +270,35 @@ int MPI_SEC_Wait(MPI_Request *request, MPI_Status *status){
     return mpi_errno;
 }
 #elif ( OPENSSL_LIB)
+/* This implementation is for variable nonce */
+int MPI_SEC_Wait(MPI_Request *request, MPI_Status *status){
+    
+    int mpi_errno = MPI_SUCCESS;
+    int  recv_sz=0; 
+    //int var;
+    unsigned long count;          
+       
+    mpi_errno=MPI_Wait(request, status);
+    MPI_Datatype datatype = MPI_CHAR;
+    MPI_Get_count(status, datatype, &recv_sz);
+    //var = openssl_dec_core(ciphertext,0,buf,0,blocktype_recv);
+    openssl_dec_core(&Ideciphertext[waitCounter][0],0,bufptr[waitCounter],0,recv_sz-16);
+     /*var = crypto_aead_aes256gcm_decrypt_afternm(bufptr[waitCounter], &count,
+                                  NULL,
+                                  &Ideciphertext[waitCounter][12], (unsigned long)(recv_sz-12),
+                                  NULL,
+                                  0,
+                                  &Ideciphertext[waitCounter][0],(const crypto_aead_aes256gcm_state *) &ctx);
+    if(var != 0){
+        printf("Decryption failed\n");
+        fflush(stdout);
+    } 
+*/
+    waitCounter++;
+    if(waitCounter == (NON_BLOCKING_SEND_RECV_SIZE-1))
+        waitCounter=0;
+    return mpi_errno;
+}
 #elif ( LIBSODIUM_LIB)
 /* This implementation is for variable nonce */
 int MPI_SEC_Wait(MPI_Request *request, MPI_Status *status){

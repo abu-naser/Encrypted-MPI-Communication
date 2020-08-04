@@ -22,6 +22,7 @@
 unsigned char bcast_ciphertext[268435456+4000]; // 268435456 = 4MB * 64
 unsigned char bcast_deciphertext[268435456+4000]; // 268435456 = 4MB * 64
 #elif ( OPENSSL_LIB)
+unsigned char ciphertext[268435456+4000];
 #elif ( LIBSODIUM_LIB)
 unsigned char bc_ciphertext[268435456+4000]; // 268435456 = 4MB * 64
 #elif ( CRYPTOPP_LIB)
@@ -1714,6 +1715,45 @@ int MPI_SEC_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
 
 }
 #elif ( OPENSSL_LIB)
+int MPI_SEC_Bcast( void *buffer, int count, MPI_Datatype datatype, int root, 
+               MPI_Comm comm )
+{
+	int mpi_errno = MPI_SUCCESS;
+    MPID_Comm *comm_ptr = NULL;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_BCAST);
+	
+	int datatype_sz;
+	
+	MPI_Type_size(datatype, &datatype_sz);
+    	
+	unsigned long long blocktype= (unsigned long long) datatype_sz*count;
+	//char * ciphertext;
+	//ciphertext=(char*) MPIU_Malloc((blocktype+32) );
+	
+	MPID_Comm_get_ptr( comm, comm_ptr );
+	
+	int rank;
+	rank = comm_ptr->rank;
+
+	if (rank == root) {
+		openssl_enc_core(ciphertext,0,buffer,0,blocktype);
+		MPI_Bcast(ciphertext, blocktype+16+12, MPI_CHAR, 0, comm);
+	}
+	
+	else if (rank != root) {
+		
+		MPI_Bcast(ciphertext, blocktype+16+12, MPI_CHAR, 0, comm);
+		
+		openssl_dec_core(ciphertext,0,buffer,0,blocktype+12);
+        		
+		
+	}
+			
+	//MPIU_Free(ciphertext);
+
+	return mpi_errno;
+}
 #elif ( LIBSODIUM_LIB)
 /* This implementation is for variable length of nonce */
 int MPI_SEC_Bcast( void *buffer, int count, MPI_Datatype datatype, int root, 

@@ -9,6 +9,10 @@
 #if ( BORINGSSL_LIB)
 unsigned char deciphertext[4194304+18];
 #elif ( OPENSSL_LIB)
+unsigned char ciphertext_recv[4194304+400];
+int outlen_dec;
+int outlen_dec_org;
+EVP_CIPHER_CTX *ctx_dec;
 #elif ( LIBSODIUM_LIB)
 unsigned char deciphertext[4194304+18];
 #elif ( CRYPTOPP_LIB)
@@ -245,6 +249,44 @@ int MPI_SEC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int ta
     return mpi_errno;
 }
 #elif ( OPENSSL_LIB)
+void openssl_dec_core(unsigned char * ciphertext_recv, unsigned long long src, 
+                      const void *recvbuf, unsigned long long dest, unsigned long long blocktype_recv)
+{
+        
+    EVP_DecryptInit_ex(ctx_dec, NULL, NULL, NULL, ciphertext_recv+src);       
+    EVP_DecryptUpdate(ctx_dec, recvbuf+dest, &outlen_dec, ciphertext_recv+12+src, (blocktype_recv-12));
+    EVP_CIPHER_CTX_ctrl(ctx_dec, EVP_CTRL_GCM_SET_TAG, 16,(ciphertext_recv+src+blocktype_recv));              
+    if (!(EVP_DecryptFinal_ex(ctx_dec, (recvbuf+dest+outlen_dec), &outlen_dec) > 0)) printf("Tag Verify Failed!\n");
+}
+
+int MPI_SEC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status , int max_pack)
+{    
+	
+	//const unsigned char gcm_key[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+	//unsigned char gcm_iv[] = {0,0,0,0,0,0,0,0,0,0,0,0}; 	
+	int i;
+	int recvtype_sz;
+	MPI_Type_size(datatype, &recvtype_sz);
+	unsigned long long blocktype_recv= (unsigned long long) recvtype_sz*count;
+	
+	//unsigned char * ciphertext_recv;
+	unsigned long long next, src;
+	
+	int mpi_errno = MPI_SUCCESS;
+
+	
+	
+	mpi_errno=MPI_Recv(ciphertext_recv, blocktype_recv+16+12, MPI_CHAR, source, tag, comm,status);
+	
+	// printf("Ciphertext @ Receiver:\n");
+	// BIO_dump_fp(stdout, ciphertext, count+16);
+	
+	openssl_dec_core(ciphertext_recv,0,buf,0,blocktype_recv+12);
+	
+	//MPIU_Free(ciphertext_recv);
+	
+	return mpi_errno;
+}
 #elif ( LIBSODIUM_LIB)
 /* This implementation used a variable nonce */
 int MPI_SEC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,

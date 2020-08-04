@@ -12,6 +12,9 @@ unsigned char Ideciphertext[NON_BLOCKING_SEND_RECV_SIZE][NON_BLOCKING_SEND_RECV_
 unsigned char * bufptr[100000];
 int reqCounter = 0;
 #elif ( OPENSSL_LIB)
+unsigned char Ideciphertext[NON_BLOCKING_SEND_RECV_SIZE][NON_BLOCKING_SEND_RECV_SIZE_2];
+unsigned char * bufptr[100000];
+int reqCounter = 0;
 #elif ( LIBSODIUM_LIB)
 unsigned char Ideciphertext[NON_BLOCKING_SEND_RECV_SIZE][NON_BLOCKING_SEND_RECV_SIZE_2];
 unsigned char * bufptr[100000];
@@ -201,6 +204,53 @@ return mpi_errno;
 
 }
 #elif ( OPENSSL_LIB)
+/* This implementation is for variable nonce */
+int MPI_SEC_Irecv(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Request *request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int var;
+    int i;
+
+
+    unsigned long long ciphertext_len;
+    MPI_Status status;
+    MPI_Request req; 
+
+    int  recvtype_sz=0;           
+    MPI_Type_size(datatype, &recvtype_sz);
+    MPID_Comm *comm_ptr = NULL;
+    MPID_Comm_get_ptr( comm, comm_ptr );
+    int rank;
+    rank = comm_ptr->rank; 
+
+   // printf("Receiving rank=%d source = %d tag = %d count=%d recvtype_sz=%d\n",rank, source, tag, count, recvtype_sz); fflush(stdout);
+
+    //mpi_errno=MPI_Irecv(&Ideciphertext[reqCounter][0], (recvtype_sz*count), MPI_CHAR, source, tag, comm, &req);
+    mpi_errno=MPI_Irecv(&Ideciphertext[reqCounter][0], (recvtype_sz*count+16+12), MPI_CHAR, source, tag, comm, &req);
+    * request = req;
+    bufptr[reqCounter]=buf;
+    reqCounter++;
+    if(reqCounter == (NON_BLOCKING_SEND_RECV_SIZE-1))
+        reqCounter=0;
+
+#if 0
+MPI_Wait(request, &status);
+ciphertext_len = (unsigned long long)(recvtype_sz*count + 16); 
+
+var = crypto_aead_aes256gcm_decrypt_afternm(buf, &count,
+                                  NULL,
+                                  Ideciphertext, ciphertext_len,
+                                  NULL,
+                                  0,
+                                  nonce,(const crypto_aead_aes256gcm_state *) &ctx);
+    if(var != 0)
+        printf("Decryption failed\n");fflush(stdout);        
+#endif
+
+return mpi_errno;
+
+}
 #elif ( LIBSODIUM_LIB)
 /* This implementation is for variable nonce */
 int MPI_SEC_Irecv(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Request *request)

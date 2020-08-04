@@ -23,6 +23,10 @@ unsigned char alltoallv_ciphertext_recvbuf[268435456+4000]; // 268435456 = 4MB *
 int cipher_send_dis[50000], cipher_recv_dis[50000];
 int cipher_sendcounts[50000], cipher_recvcounts[50000];
 #elif ( OPENSSL_LIB)
+unsigned char alltoallv_ciphertext_sendbuf[268435456+4000];
+unsigned char alltoallv_ciphertext_recvbuf[268435456+4000];
+int cipher_send_dis[50000], cipher_recv_dis[50000];
+int cipher_sendcounts[50000], cipher_recvcounts[50000];
 #elif ( LIBSODIUM_LIB)
 unsigned char alltoallv_ciphertext_sendbuf[268435456+4000]; // 268435456 = 4MB * 64
 unsigned char alltoallv_ciphertext_recvbuf[268435456+4000]; // 268435456 = 4MB * 64
@@ -743,6 +747,78 @@ unsigned int i;
     return mpi_errno;
 }
 #elif ( OPENSSL_LIB)
+int MPI_SEC_Alltoallv(const void *sendbuf, const int *sendcounts,
+                  const int *sdispls, MPI_Datatype sendtype, void *recvbuf,
+                  const int *recvcounts, const int *rdispls, MPI_Datatype recvtype,
+                  MPI_Comm comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Comm *comm_ptr = NULL;
+    int var;
+	
+    int sendtype_sz, recvtype_sz;
+    unsigned long long ciphertext_sendbuf_len = 0;
+    sendtype_sz= recvtype_sz= 0;
+
+    var=MPI_Type_size(sendtype, &sendtype_sz);
+    var=MPI_Type_size(recvtype, &recvtype_sz);
+
+    MPID_Comm_get_ptr( comm, comm_ptr);
+	int rank;
+	rank = comm_ptr->rank;
+
+	unsigned long long count=0;
+    unsigned long long next, dest;
+	unsigned long long blocktype_send=0;
+    
+    int k;
+    int send_index = 0;
+    int recv_index = 0;
+  
+    dest = 0;
+    cipher_send_dis[0] = 0; // send data to 0 process from 0.
+    cipher_recv_dis[0] = 0; // reveive data from 0 process to 0.
+
+    for( k=0; k < comm_ptr->local_size; k++){
+		
+        blocktype_send = (unsigned long long)(sendtype_sz*sendcounts[k]);
+        next = (unsigned long long)(sdispls[k]*sendtype_sz);
+
+
+        openssl_enc_core(alltoallv_ciphertext_sendbuf,send_index,sendbuf,next,blocktype_send);
+        
+        /* update new displacement for send and receive */
+        cipher_send_dis[k] = send_index;
+        cipher_recv_dis[k] = recv_index;
+
+        send_index +=(sendcounts[k]*sendtype_sz+16+12);
+        recv_index +=(recvcounts[k]*recvtype_sz+16+12);
+
+        /* update cipher sendcounts and receive counts */
+        cipher_sendcounts[k] = (sendcounts[k]*sendtype_sz+16+12);
+        cipher_recvcounts[k] = (recvcounts[k]*recvtype_sz+16+12); 
+        
+     }
+
+     var=MPI_Alltoallv(alltoallv_ciphertext_sendbuf, cipher_sendcounts,
+                  cipher_send_dis, MPI_CHAR, alltoallv_ciphertext_recvbuf,
+                  cipher_recvcounts, cipher_recv_dis, MPI_CHAR, comm);
+
+     for( k=0; k < comm_ptr->local_size; k++){   
+
+  
+        next = (unsigned long long)cipher_recv_dis[k];   
+        dest = (unsigned long long)(rdispls[k]*recvtype_sz);
+		
+		
+		openssl_dec_core(alltoallv_ciphertext_recvbuf,next,recvbuf,dest,((unsigned long long)cipher_recvcounts[k]-16));
+
+    }                       
+
+
+    return mpi_errno;
+}
+
 #elif ( LIBSODIUM_LIB)
 /* This implementation use variable nonce */
 int MPI_SEC_Alltoallv(const void *sendbuf, const int *sendcounts,
