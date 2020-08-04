@@ -24,6 +24,8 @@ unsigned char Iciphertext[NON_BLOCKING_SEND_RECV_SIZE][NON_BLOCKING_SEND_RECV_SI
 int isendCounter = 0;
 #elif ( OPENSSL_LIB)
 #elif ( LIBSODIUM_LIB)
+unsigned char Iciphertext[NON_BLOCKING_SEND_RECV_SIZE][NON_BLOCKING_SEND_RECV_SIZE_2];
+int isendCounter = 0;
 #elif ( CRYPTOPP_LIB)
 #endif
 
@@ -218,6 +220,39 @@ int MPI_SEC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, i
 }
 #elif ( OPENSSL_LIB)
 #elif ( LIBSODIUM_LIB)
+/* This implementation is for variable nonce */
+int MPI_SEC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request)
+{
+
+int mpi_errno = MPI_SUCCESS;
+unsigned long long ciphertext_len; 
+MPI_Request req;
+int  sendtype_sz=0;           
+MPI_Type_size(datatype, &sendtype_sz); 
+
+/* Set the nonce in send_ciphertext */
+randombytes_buf(&Iciphertext[isendCounter][0], 12);
+/*nonceCounter++;
+memset(&Iciphertext[isendCounter][0], 0, 8);
+Iciphertext[isendCounter][8] = (nonceCounter >> 24) & 0xFF;
+Iciphertext[isendCounter][9] = (nonceCounter >> 16) & 0xFF;
+Iciphertext[isendCounter][10] = (nonceCounter >> 8) & 0xFF;
+Iciphertext[isendCounter][11] = nonceCounter & 0xFF;*/
+
+int var = crypto_aead_aes256gcm_encrypt_afternm(&Iciphertext[isendCounter][12],&ciphertext_len,
+            buf, count*sendtype_sz,
+            NULL, 0,
+            NULL, &Iciphertext[isendCounter][0], (const crypto_aead_aes256gcm_state *) &ctx);
+
+mpi_errno=MPI_Isend(&Iciphertext[isendCounter][0], (ciphertext_len+12), MPI_CHAR, dest, tag, comm, &req);
+* request = req;
+isendCounter++;
+
+if(isendCounter == (NON_BLOCKING_SEND_RECV_SIZE-1))
+    isendCounter=0;
+
+return mpi_errno;
+}
 #elif ( CRYPTOPP_LIB)
 #endif
 
