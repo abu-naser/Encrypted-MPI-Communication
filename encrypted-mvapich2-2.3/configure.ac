@@ -393,6 +393,11 @@ m4_include([subsys_include.m4])
 
 dnl ----------------------------------------------------------------------------
 dnl setup top-level argument handling
+# Added by Abu Naser(an16e@my.fsu.edu)
+AC_ARG_WITH(enc-lib,
+	AC_HELP_STRING([--with-enc-lib="libboringssl"], [libboringssl, libopenssl, libsodium, libcryptopp]),,
+	with_enc_lib=libboringssl)
+# End of add    
 AC_ARG_ENABLE(echo, 
 	AC_HELP_STRING([--enable-echo], [Turn on strong echoing. The default is enable=no.]),
 	set -x)
@@ -1132,6 +1137,36 @@ if test "$enable_fast_ndebug" = "yes" ; then
     # so no Fortran files contain any preprocessing statements.
     # Don't set FFLAGS or FCFLAGS with any -D.
 fi
+
+# Added by Abu Naser(an16e@my.fsu.edu)
+if test "$with_enc_lib" = "libboringssl" ; then
+    AC_DEFINE_UNQUOTED(BORING_LIB,1,[define enc library])
+    AC_DEFINE_UNQUOTED(OPEN_LIB,  0,[define enc library])
+    AC_DEFINE_UNQUOTED(SOIDUM_LIB,0,[define enc library])
+    AC_DEFINE_UNQUOTED(CRYPTO_LIB,0,[define enc library]) 
+elif test "$with_enc_lib" = "libopenssl" ; then
+    AC_DEFINE_UNQUOTED(BORING_LIB,0,[define enc library])
+    AC_DEFINE_UNQUOTED(OPEN_LIB,  1,[define enc library])
+    AC_DEFINE_UNQUOTED(SOIDUM_LIB,0,[define enc library])
+    AC_DEFINE_UNQUOTED(CRYPTO_LIB,0,[define enc library])
+elif test "$with_enc_lib" = "libsodium" ; then
+    AC_DEFINE_UNQUOTED(BORING_LIB,0,[define enc library])
+    AC_DEFINE_UNQUOTED(OPEN_LIB,  0,[define enc library])
+    AC_DEFINE_UNQUOTED(SOIDUM_LIB,1,[define enc library])
+    AC_DEFINE_UNQUOTED(CRYPTO_LIB,0,[define enc library])
+elif test "$with_enc_lib" = "libcryptopp" ; then
+    AC_DEFINE_UNQUOTED(BORING_LIB,0,[define enc library])
+    AC_DEFINE_UNQUOTED(OPEN_LIB,  0,[define enc library])
+    AC_DEFINE_UNQUOTED(SOIDUM_LIB,0,[define enc library])
+    AC_DEFINE_UNQUOTED(CRYPTO_LIB,1,[define enc library])          
+else
+    AC_DEFINE_UNQUOTED(BORING_LIB,1,[define enc library])
+    AC_DEFINE_UNQUOTED(OPEN_LIB,  0,[define enc library])
+    AC_DEFINE_UNQUOTED(SOIDUM_LIB,0,[define enc library])
+    AC_DEFINE_UNQUOTED(CRYPTO_LIB,0,[define enc library])     
+fi
+
+# End of add
 
 # error-checking
 # Change default into the specific value of the default
