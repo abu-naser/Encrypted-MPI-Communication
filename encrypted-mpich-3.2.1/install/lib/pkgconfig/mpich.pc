@@ -1,0 +1,20 @@
+# this gives access to the mpich header files
+prefix=/home/naser/encrypted-mpi-communication/encrypted-mpich-3.2.1/install
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: mpich
+Description: High Performance and portable MPI
+Version: 3.2.1
+URL: http://www.mcs.anl.gov/research/projects/mpich
+Requires:
+Libs: -Wl,-rpath -Wl,${exec_prefix}/lib  -L${libdir} -lmpi    -lrt -lpthread 
+Cflags:   -I${includedir}
+
+# pkg-config does not understand Cxxflags, etc. So we allow users to
+# query them using the --variable option
+
+cxxflags=  -I${includedir}
+fflags= -I${includedir}
+fcflags= -I${includedir}

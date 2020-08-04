@@ -1,0 +1,25 @@
+<dir>
+<file name="handlemem.c" info="1510366784"/>
+<file name="strerror.c" info="1510366784"/>
+<file name="mpiu_strerror.h" info="1510366784"/>
+<file name="check.c" info="1510366784"/>
+<file name="argstr.c" info="1510366784"/>
+<file name="trmem.c" info="1510366784"/>
+<file name="safestr.c" info="1510366784"/>
+</dir>
+<data>
+<fileinfo name="handlemem.c">
+</fileinfo>
+<fileinfo name="strerror.c">
+</fileinfo>
+<fileinfo name="mpiu_strerror.h">
+</fileinfo>
+<fileinfo name="check.c">
+</fileinfo>
+<fileinfo name="argstr.c">
+</fileinfo>
+<fileinfo name="trmem.c">
+</fileinfo>
+<fileinfo name="safestr.c">
+</fileinfo>
+</data>
