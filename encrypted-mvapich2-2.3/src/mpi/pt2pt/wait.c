@@ -7,11 +7,11 @@
 
 #include "mpiimpl.h"
 
-#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
+#if ( BORINGSSL_LIB)
 int waitCounter = 0;
-#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
-#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
-#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#elif ( OPENSSL_LIB)
+#elif ( LIBSODIUM_LIB)
+#elif ( CRYPTOPP_LIB)
 #endif
 
 /* -- Begin Profiling Symbol Block for routine MPI_Wait */
@@ -239,7 +239,7 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
+#if ( BORINGSSL_LIB)
 
 int MPI_SEC_Wait(MPI_Request *request, MPI_Status *status){
     
@@ -266,7 +266,7 @@ int MPI_SEC_Wait(MPI_Request *request, MPI_Status *status){
         waitCounter=0;
     return mpi_errno;
 }
-#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
-#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
-#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#elif ( OPENSSL_LIB)
+#elif ( LIBSODIUM_LIB)
+#elif ( CRYPTOPP_LIB)
 #endif
