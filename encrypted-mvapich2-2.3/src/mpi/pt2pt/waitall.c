@@ -427,6 +427,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
     /* --END ERROR HANDLING-- */
 }
 
+#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
 /* Variable nonce */
 
 int MPI_SEC_Waitall(int count, MPI_Request req[], MPI_Status sta[]){
@@ -553,4 +554,8 @@ int MPI_SEC_Waitall(int count, MPI_Request req[], MPI_Status sta[]){
 
     return mpi_errno;
 }
+#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
+#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
+#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#endif
 /* End of adding */

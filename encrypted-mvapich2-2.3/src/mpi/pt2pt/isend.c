@@ -16,14 +16,16 @@
  * For detailed copyright and licensing information, please refer to the
  * copyright file COPYRIGHT in the top level MVAPICH2 directory.
  */
-#include "mpiimpl.h"
-#include <openssl/evp.h>
-#include <openssl/aes.h>
-#include <openssl/err.h>
-#include <openssl/aead.h>
 
+#include "mpiimpl.h"
+
+#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
 unsigned char Iciphertext[NON_BLOCKING_SEND_RECV_SIZE][NON_BLOCKING_SEND_RECV_SIZE_2];
 int isendCounter = 0;
+#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
+#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
+#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#endif
 
 /* -- Begin Profiling Symbol Block for routine MPI_Isend */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -173,6 +175,7 @@ int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
     /* --END ERROR HANDLING-- */
 }
 
+#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
 /*Variable nonce*/
 int MPI_SEC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request)
 {
@@ -213,6 +216,10 @@ int MPI_SEC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, i
 
     return mpi_errno;
 }
+#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
+#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
+#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#endif
 
 /*Fixed nonce*/
 #if 0

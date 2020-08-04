@@ -18,12 +18,13 @@
  */
 
 #include "mpiimpl.h"
-#include <openssl/evp.h>
-#include <openssl/aes.h>
-#include <openssl/err.h>
-#include <openssl/aead.h>
+#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
 unsigned char bcast_ciphertext[268435456+4000]; // 268435456 = 4MB * 64
 unsigned char bcast_deciphertext[268435456+4000]; // 268435456 = 4MB * 64
+#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
+#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
+#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#endif
 #include "collutil.h"
 #ifdef _OSU_MVAPICH_
 #   include "coll_shmem.h"
@@ -1646,6 +1647,7 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
     /* --END ERROR HANDLING-- */
 }
 
+#if (ENC_LIBRARY_NAME == BORINGSSL_LIB)
 /* variable nonce */
 int MPI_SEC_Bcast( void *buffer, int count, MPI_Datatype datatype, int root, 
                MPI_Comm comm)
@@ -1709,3 +1711,7 @@ int MPI_SEC_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
 	return mpi_errno;
 
 }
+#elif (ENC_LIBRARY_NAME == OPENSSL_LIB)
+#elif (ENC_LIBRARY_NAME == LIBSODIUM_LIB)
+#elif (ENC_LIBRARY_NAME == CRYPTOPP_LIB)
+#endif
