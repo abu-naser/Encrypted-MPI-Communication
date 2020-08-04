@@ -23,10 +23,10 @@
  * copyright file COPYRIGHT in the top level MVAPICH2 directory.
  */
 //#define ENC_LIBRARY_NAME 2 //ENC_LIBRARY_TYPE
-#define BORINGSSL_LIB 0 //BORING_LIB   
-#define OPENSSL_LIB   0 //OPEN_LIB
-#define LIBSODIUM_LIB 0 //SOIDUM_LIB
-#define CRYPTOPP_LIB  1 //CRYPTO_LIB
+#define BORINGSSL_LIB BORING_LIB   
+#define OPENSSL_LIB   OPEN_LIB
+#define LIBSODIUM_LIB SOIDUM_LIB
+#define CRYPTOPP_LIB  CRYPTO_LIB
 
 #if BORINGSSL_LIB
 #include <openssl/evp.h>
