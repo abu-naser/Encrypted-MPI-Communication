@@ -1,0 +1,10 @@
+	MPIR_CVAR_CTXID_EAGER_SIZE      =2	SCOPE_ALL_EQ	No-object	MPI_INT	VERBOSITY_USER_BASIC	The MPIR_CVAR_CTXID_EAGER_SIZE environment variable allows you to specify how many words in the context ID mask will be set aside for the eager allocation protocol.  If the application is running out of context IDs, reducing this value may help.
+	MPIR_CVAR_IBA_EAGER_THRESHOLD   =-1	SCOPE_ALL_EQ	No-object	MPI_INT	VERBOSITY_USER_BASIC	This specifies the switch point between eager and rendezvous protocol in MVAPICH2. For better performance, the value of MPIR_CVAR_MV2_IBA_EAGER_THRESHOLD should be set the same as MPIR_CVAR_MV2_VBUF_TOTAL_SIZE.
+	MPIR_CVAR_NEMESIS_SHM_EAGER_MAX_SZ=-1	SCOPE_ALL_EQ	No-object	MPI_INT	VERBOSITY_USER_BASIC	This cvar controls the message size at which Nemesis switches from eager to rendezvous mode for shared memory. If this cvar is set to -1, then Nemesis will choose an appropriate value.
+	MPIR_CVAR_NEMESIS_SHM_READY_EAGER_MAX_SZ=-2	SCOPE_ALL_EQ	No-object	MPI_INT	VERBOSITY_USER_BASIC	This cvar controls the message size at which Nemesis switches from eager to rendezvous mode for ready-send messages.  If this cvar is set to -1, then ready messages will always be sent eagerly.  If this cvar is set to -2, then Nemesis will choose an appropriate value.
+	MPIR_CVAR_CH3_EAGER_MAX_MSG_SIZE=131072	SCOPE_ALL_EQ	No-object	MPI_INT	VERBOSITY_USER_BASIC	This cvar controls the message size at which CH3 switches from eager to rendezvous mode.
+	MPIR_CVAR_CTXID_EAGER_SIZE      :	SCOPE_ALL_EQ	No-object	MPI_INT	VERBOSITY_USER_BASIC
+	MPIR_CVAR_NEMESIS_SHM_EAGER_MAX_SZ:	SCOPE_ALL_EQ	No-object	MPI_INT	VERBOSITY_USER_BASIC
+	MPIR_CVAR_NEMESIS_SHM_READY_EAGER_MAX_SZ:	SCOPE_ALL_EQ	No-object	MPI_INT	VERBOSITY_USER_BASIC
+	MPIR_CVAR_IBA_EAGER_THRESHOLD   :	SCOPE_ALL_EQ	No-object	MPI_INT	VERBOSITY_USER_BASIC
+	MPIR_CVAR_CH3_EAGER_MAX_MSG_SIZE:	SCOPE_ALL_EQ	No-object	MPI_INT	VERBOSITY_USER_BASIC
