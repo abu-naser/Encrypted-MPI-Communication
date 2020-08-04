@@ -38,6 +38,10 @@ unsigned char key [32] = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n
 unsigned char send_ciphertext[4194304+18];
 int nonceCounter;
 #elif CRYPTOPP_LIB
+int nonceCounter=0;
+unsigned long key_size=32;
+unsigned char send_ciphertext[4194304+18];
+unsigned char gcm_key[32] = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','a','b','c','d','e','f'};
 #endif
 
 
@@ -313,6 +317,38 @@ return mpi_errno;
 
 
 #elif CRYPTOPP_LIB
+int MPI_SEC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
+{
+	int mpi_errno = MPI_SUCCESS;
+
+	int ciphertext_len = 0;
+
+	//unsigned char * ciphertext;
+    int  sendtype_sz;        
+
+	//unsigned char gcm_key[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+	//wrapper_nonce(unsigned char * nonce, unsigned long nonce_len)
+	wrapper_nonce(send_ciphertext, 12);
+	//memset(&send_ciphertext, 0, 12);
+	    
+	/* nonceCounter++;
+	memset(&send_ciphertext, 0, 8);
+	send_ciphertext[8] = (nonceCounter >> 24) & 0xFF;
+	send_ciphertext[9] = (nonceCounter >> 16) & 0xFF;
+	send_ciphertext[10] = (nonceCounter >> 8) & 0xFF;
+	send_ciphertext[11] = nonceCounter & 0xFF; */
+    
+    MPI_Type_size(datatype, &sendtype_sz);
+
+	//wrapper_encrypt( char *sendbuf ,  char *ciphertext , int datacount, unsigned long key_size, unsigned char *key, unsigned char *nonce)
+	wrapper_encrypt( buf ,  send_ciphertext+12 , sendtype_sz*count, key_size, gcm_key, send_ciphertext);
+	
+    ciphertext_len= count* sendtype_sz+12+12;
+	mpi_errno=MPI_Send(send_ciphertext, ciphertext_len, MPI_CHAR, dest, tag, comm);
+
+	return mpi_errno;
+
+}
 #endif
 
 /* Fixed nonce implementation */
@@ -410,6 +446,18 @@ void init_crypto(){
     return;
 }
 #elif CRYPTOPP_LIB
+// void cryptopp_init(unsigned long user_key_size){
+void init_crypto(){	
+	key_size=32;
+    unsigned char iv[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+	/* int world_rank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+	if (world_rank == 0){
+		if (user_key_size==16) printf("\n\t\t****** Secure MPI with CryptoPP 128  GCM ********\n");
+		else if (user_key_size==32) printf("\n\t\t****** Secure MPI with CryptoPP 256  GCM ********\n");
+    }*/
+    wrapper_init_cryptopp( key_size,  gcm_key,   iv); 
+}
 #endif
 
 /*End of adding */

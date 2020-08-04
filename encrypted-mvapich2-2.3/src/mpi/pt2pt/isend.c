@@ -27,6 +27,8 @@ int isendCounter = 0;
 unsigned char Iciphertext[NON_BLOCKING_SEND_RECV_SIZE][NON_BLOCKING_SEND_RECV_SIZE_2];
 int isendCounter = 0;
 #elif ( CRYPTOPP_LIB)
+unsigned char Iciphertext[NON_BLOCKING_SEND_RECV_SIZE][NON_BLOCKING_SEND_RECV_SIZE_2];
+int isendCounter = 0;
 #endif
 
 /* -- Begin Profiling Symbol Block for routine MPI_Isend */
@@ -254,6 +256,48 @@ if(isendCounter == (NON_BLOCKING_SEND_RECV_SIZE-1))
 return mpi_errno;
 }
 #elif ( CRYPTOPP_LIB)
+int MPI_SEC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request)
+{
+
+    int mpi_errno = MPI_SUCCESS;
+    //MPI_Status status;
+    MPI_Request req;
+
+    //unsigned long ciphertext_len=0;
+    int  sendtype_sz;           
+    
+    MPI_Type_size(datatype, &sendtype_sz);   
+	
+    //unsigned long   max_out_len = (unsigned long) (12 + (sendtype_sz*count));
+	//wrapper_nonce(unsigned char * nonce, unsigned long nonce_len)
+	wrapper_nonce(&Iciphertext[isendCounter][0], 12);
+
+   /*  nonceCounter++;
+    memset(&Iciphertext[isendCounter][0], 0, 8);
+    Iciphertext[isendCounter][8] = (nonceCounter >> 24) & 0xFF;
+    Iciphertext[isendCounter][9] = (nonceCounter >> 16) & 0xFF;
+    Iciphertext[isendCounter][10] = (nonceCounter >> 8) & 0xFF;
+    Iciphertext[isendCounter][11] = nonceCounter & 0xFF; */
+
+    /* int var = crypto_aead_aes256gcm_encrypt_afternm(&Iciphertext[isendCounter][12],&ciphertext_len,
+            buf, count*sendtype_sz,
+            NULL, 0,
+            NULL, &Iciphertext[isendCounter][0], (const crypto_aead_aes256gcm_state *) &ctx);
+ */
+				
+	//wrapper_encrypt( char *sendbuf ,  char *ciphertext , int datacount, unsigned long key_size, unsigned char *key, unsigned char *nonce)
+	wrapper_encrypt( buf ,  &Iciphertext[isendCounter][12] , sendtype_sz*count, key_size, gcm_key,  &Iciphertext[isendCounter][0]);
+
+	//ciphertext_len= count* sendtype_sz+12+12;
+	
+    mpi_errno = MPI_Isend(&Iciphertext[isendCounter][0], count* sendtype_sz+12+12, MPI_CHAR, dest, tag, comm, &req);
+    * request = req;
+    isendCounter++;
+    if(isendCounter == (NON_BLOCKING_SEND_RECV_SIZE-1))
+        isendCounter=0;
+
+    return mpi_errno;
+}
 #endif
 
 /*Fixed nonce*/

@@ -624,5 +624,71 @@ int MPI_SEC_Waitall(int count, MPI_Request req[], MPI_Status sta[]){
     return mpi_errno;
 }
 #elif ( CRYPTOPP_LIB)
+/* This implementation is for variable nonce */
+int MPI_SEC_Waitall(int count, MPI_Request req[], MPI_Status sta[]){
+    
+    int mpi_errno = MPI_SUCCESS;
+    int  recv_sz=0; 
+    int var,i;
+    unsigned long dec_count;          
+    int chk_f[1000];        
+  
+    MPID_Request * request_ptr_array[MPID_REQUEST_PTR_ARRAY_SIZE];
+    MPID_Request ** request_ptrs = request_ptr_array;
+	
+	MPI_Datatype datatype = MPI_CHAR;
+   
+    for(i=0;i<count;i++){
+        if (req[i] != MPI_REQUEST_NULL)
+        {
+            MPID_Request_get_ptr(req[i], request_ptrs[i]);
+
+            if(request_ptrs[i]->kind == MPID_REQUEST_RECV){
+               // printf("MPID_REQUEST_RECV %d\n",i);fflush(stdout);
+                chk_f[i] =1;
+            }
+            else if(request_ptrs[i]->kind == MPID_REQUEST_SEND){
+               // printf("MPID_REQUEST_SEND %d\n",i);fflush(stdout);
+                chk_f[i] =2;
+            }
+             else if(request_ptrs[i]->kind == MPID_PREQUEST_SEND){
+                //printf("MPID_PREQUEST_SEND %d\n",i);fflush(stdout);
+                chk_f[i] =2;
+            }
+             else if(request_ptrs[i]->kind == MPID_PREQUEST_RECV){
+                //printf("MPID_PREQUEST_RECV %d\n",i);fflush(stdout);
+                chk_f[i] =1;
+            }  
+        }
+        else{
+            chk_f[i] = 4;
+        }
+    }
+       
+    mpi_errno=MPI_Waitall(count, req, sta);
+	
+	for(i=0; i<count; i++){
+		if(chk_f[i] == 1){
+			MPI_Get_count(&sta[i], datatype, &recv_sz);
+
+			/* var = crypto_aead_aes256gcm_decrypt_afternm(bufptr[waitCounter], &dec_count,
+									  NULL,
+									  &Ideciphertext[waitCounter][12], (unsigned long)(recv_sz-12),
+									  NULL,
+									  0,
+									  &Ideciphertext[waitCounter][0],(const crypto_aead_aes256gcm_state *) &ctx); */
+									  
+			//wrapper_decrypt( char *ciphertext ,  char *recvbuf, int datacount+tagsize, unsigned long key_size, unsigned char *key, unsigned char *nonce)
+			
+			wrapper_decrypt( &Ideciphertext[waitCounter][12] ,  bufptr[waitCounter], (unsigned long) (recv_sz-12), key_size, gcm_key,&Ideciphertext[waitCounter][0]);
+
+
+			waitCounter++;
+			if(waitCounter == (NON_BLOCKING_SEND_RECV_SIZE-1))
+				waitCounter=0;
+		}
+	}
+    return mpi_errno;
+}
 #endif
 /* End of adding */

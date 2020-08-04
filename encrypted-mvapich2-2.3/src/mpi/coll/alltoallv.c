@@ -29,6 +29,10 @@ unsigned char alltoallv_ciphertext_recvbuf[268435456+4000]; // 268435456 = 4MB *
 int cipher_send_dis[50000], cipher_recv_dis[50000];
 int cipher_sendcounts[50000], cipher_recvcounts[50000];
 #elif ( CRYPTOPP_LIB)
+unsigned char alltoallv_ciphertext_sendbuf[268435456+4000]; // 268435456 = 4MB * 64
+unsigned char alltoallv_ciphertext_recvbuf[268435456+4000]; // 268435456 = 4MB * 64
+int cipher_send_dis[50000], cipher_recv_dis[50000];
+int cipher_sendcounts[50000], cipher_recvcounts[50000];
 #endif
 
 /* -- Begin Profiling Symbol Block for routine MPI_Alltoallv */
@@ -839,4 +843,105 @@ int MPI_SEC_Alltoallv(const void *sendbuf, const int *sendcounts,
     return mpi_errno;
 }
 #elif ( CRYPTOPP_LIB)
+int MPI_SEC_Alltoallv(const void *sendbuf, const int *sendcounts,
+                  const int *sdispls, MPI_Datatype sendtype, void *recvbuf,
+                  const int *recvcounts, const int *rdispls, MPI_Datatype recvtype,
+                  MPI_Comm comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Comm *comm_ptr = NULL;
+    int var;
+	
+    int sendtype_sz, recvtype_sz;
+    unsigned long long ciphertext_sendbuf_len = 0;
+    sendtype_sz= recvtype_sz= 0;
+
+    var=MPI_Type_size(sendtype, &sendtype_sz);
+    var=MPI_Type_size(recvtype, &recvtype_sz);
+
+    MPID_Comm_get_ptr( comm, comm_ptr);
+	int rank;
+	rank = comm_ptr->rank;
+
+	unsigned long long count=0;
+    unsigned int next, dest;
+	unsigned long long t=0;
+    unsigned int j;
+    int k;
+    int send_index = 0;
+    int recv_index = 0;
+    
+    dest = 0;
+    cipher_send_dis[0] = 0; // send data to 0 process from 0.
+    cipher_recv_dis[0] = 0; // reveive data from 0 process to 0.
+
+    for(j = 0, k=0; j < comm_ptr->local_size; j++, k++){
+        t = (unsigned long )(sendtype_sz*sendcounts[k]);
+        next = (unsigned int)(sdispls[k]*sendtype_sz);
+
+        /* Set the nonce in send_ciphertext */
+        //randombytes_buf(&alltoallv_ciphertext_sendbuf[send_index], 12);
+		
+		//wrapper_nonce(unsigned char * nonce, unsigned long nonce_len)
+		wrapper_nonce(&alltoallv_ciphertext_sendbuf[send_index], 12);
+
+        /* nonceCounter++;
+        memset(&alltoallv_ciphertext_sendbuf[send_index], 0, 8);
+        alltoallv_ciphertext_sendbuf[send_index+8] = (nonceCounter >> 24) & 0xFF;
+        alltoallv_ciphertext_sendbuf[send_index+9] = (nonceCounter >> 16) & 0xFF;
+        alltoallv_ciphertext_sendbuf[send_index+10] = (nonceCounter >> 8) & 0xFF;
+        alltoallv_ciphertext_sendbuf[send_index+11] = nonceCounter & 0xFF; */
+     
+        /* var = crypto_aead_aes256gcm_encrypt_afternm((alltoallv_ciphertext_sendbuf+send_index+12), &ciphertext_sendbuf_len,
+            sendbuf+next, t,
+            NULL, 0,
+            NULL, (alltoallv_ciphertext_sendbuf+send_index), (const crypto_aead_aes256gcm_state *) &ctx);  */
+		
+		//wrapper_encrypt( char *sendbuf ,  char *ciphertext , int datacount, unsigned long key_size, unsigned char *key, unsigned char *nonce)
+		wrapper_encrypt( sendbuf+next ,  alltoallv_ciphertext_sendbuf+send_index+12 , t, key_size, gcm_key, alltoallv_ciphertext_sendbuf+send_index);
+
+           
+        //dest = (unsigned int)(sendtype_sz*sendcounts[k]+16);
+        
+        /* update new displacement for send and receive */
+        cipher_send_dis[k] = send_index;
+        cipher_recv_dis[k] = recv_index;
+
+        send_index +=(sendcounts[k]*sendtype_sz+12+12);
+        recv_index +=(recvcounts[k]*recvtype_sz+12+12);
+
+        /* update cipher sendcounts and receive counts */
+        cipher_sendcounts[k] = (sendcounts[k]*sendtype_sz+12+12);
+        cipher_recvcounts[k] = (recvcounts[k]*recvtype_sz+12+12); 
+       
+     }
+
+     var=MPI_Alltoallv(alltoallv_ciphertext_sendbuf, cipher_sendcounts,
+                  cipher_send_dis, MPI_CHAR, alltoallv_ciphertext_recvbuf,
+                  cipher_recvcounts, cipher_recv_dis, MPI_CHAR, comm);
+	unsigned int i ;
+     for(i = 0, k=0; i < comm_ptr->local_size; i++, k++){
+        
+        /* decrypt from modified location. */
+        next = (unsigned int)cipher_recv_dis[k];
+
+        /* receive in actual destination as user passed */
+        dest = (unsigned int )(rdispls[k]*recvtype_sz);
+
+        /* var = crypto_aead_aes256gcm_decrypt_afternm(((recvbuf+dest)), &count,
+                                  NULL,
+                                  (alltoallv_ciphertext_recvbuf+next+12), (unsigned long long)(cipher_recvcounts[k]-12),
+                                  NULL,
+                                  0,
+                                  (alltoallv_ciphertext_recvbuf+next),(const crypto_aead_aes256gcm_state *) &ctx); */
+        
+		//wrapper_decrypt( char *ciphertext ,  char *recvbuf, int datacount+tagsize, unsigned long key_size, unsigned char *key, unsigned char *nonce)
+		
+		wrapper_decrypt( alltoallv_ciphertext_recvbuf+next+12 ,  recvbuf+dest, cipher_recvcounts[k]-12, key_size, gcm_key,alltoallv_ciphertext_recvbuf+next);
+    }                       
+
+
+    return mpi_errno;
+}
+
 #endif

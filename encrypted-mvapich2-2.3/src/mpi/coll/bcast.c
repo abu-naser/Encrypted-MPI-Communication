@@ -25,6 +25,7 @@ unsigned char bcast_deciphertext[268435456+4000]; // 268435456 = 4MB * 64
 #elif ( LIBSODIUM_LIB)
 unsigned char bc_ciphertext[268435456+4000]; // 268435456 = 4MB * 64
 #elif ( CRYPTOPP_LIB)
+unsigned char bc_ciphertext[268435456+4000]; // 268435456 = 4MB * 64
 #endif
 #include "collutil.h"
 #ifdef _OSU_MVAPICH_
@@ -1770,4 +1771,63 @@ int MPI_SEC_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
 	return mpi_errno;
 }
 #elif ( CRYPTOPP_LIB)
+int MPI_SEC_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, 
+               MPI_Comm comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Comm *comm_ptr = NULL;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_BCAST);
+	
+	unsigned long long ciphertext_len=0;
+	int var;	
+	
+	MPID_Comm_get_ptr( comm, comm_ptr );
+	
+	int rank;
+	rank = comm_ptr->rank;
+
+    int  type_sz;           
+    MPI_Type_size(datatype, &type_sz); 
+
+	if (rank == root) {
+        /* Set the nonce in send_ciphertext */
+        wrapper_nonce(bc_ciphertext, 12);
+        /* nonceCounter++;
+        memset(bc_ciphertext, 0, 8);
+        bc_ciphertext[8] = (nonceCounter >> 24) & 0xFF;
+        bc_ciphertext[9] = (nonceCounter >> 16) & 0xFF;
+        bc_ciphertext[10] = (nonceCounter >> 8) & 0xFF;
+        bc_ciphertext[11] = nonceCounter & 0xFF; */
+
+		/* var = crypto_aead_aes256gcm_encrypt_afternm(bc_ciphertext+12, &ciphertext_len, 
+              buffer, (unsigned long long)(type_sz*count),
+              NULL, 0, NULL, 
+              bc_ciphertext, (const crypto_aead_aes256gcm_state *) &ctx); */
+			  
+		//wrapper_encrypt( char *sendbuf ,  char *ciphertext , int datacount, unsigned long key_size, unsigned char *key, unsigned char *nonce)
+		//buffer[type_sz*count]='\0';
+		//buffer[type_sz*count+1]='\0';
+		//buffer+(type_sz*count)='\0';
+		wrapper_encrypt( buffer ,  bc_ciphertext+12 , type_sz*count, key_size, gcm_key, bc_ciphertext);
+
+	MPI_Bcast(bc_ciphertext, ((type_sz*count)+12+12), MPI_CHAR, root, comm);
+	}
+	else if (rank != root) {	
+		MPI_Bcast(bc_ciphertext, ((type_sz*count)+12+12), MPI_CHAR, root, comm);
+		
+		/* var = crypto_aead_aes256gcm_decrypt_afternm(buffer, &count,
+              NULL,
+              bc_ciphertext+12,(unsigned long long)((type_sz*count)+16),
+              NULL,0,
+              bc_ciphertext,(const crypto_aead_aes256gcm_state *) &ctx); */
+		
+		//wrapper_decrypt( char *ciphertext ,  char *recvbuf, int datacount+tagsize, unsigned long key_size, unsigned char *key, unsigned char *nonce)
+		
+		wrapper_decrypt( bc_ciphertext+12 ,  buffer, (type_sz*count)+12, key_size, gcm_key,bc_ciphertext);
+		
+	}
+		
+	return mpi_errno;
+}
 #endif

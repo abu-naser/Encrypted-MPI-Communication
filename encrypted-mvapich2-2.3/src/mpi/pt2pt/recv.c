@@ -12,6 +12,7 @@ unsigned char deciphertext[4194304+18];
 #elif ( LIBSODIUM_LIB)
 unsigned char deciphertext[4194304+18];
 #elif ( CRYPTOPP_LIB)
+unsigned char ciphertext_recv[4194304+400];
 #endif
 
 /* -- Begin Profiling Symbol Block for routine MPI_Recv */
@@ -272,6 +273,29 @@ int MPI_SEC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int ta
     return mpi_errno;
 }
 #elif ( CRYPTOPP_LIB)
+int MPI_SEC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status)
+{   
+	int mpi_errno = MPI_SUCCESS;
+
+	//unsigned char * ciphertext;
+     int  recvtype_sz;           
+    MPI_Type_size(datatype, &recvtype_sz);
+ 
+    mpi_errno=MPI_Recv(ciphertext_recv, (count*recvtype_sz+12+12), MPI_CHAR, source, tag, comm,status);
+	
+	int decryptedtext_len=0;
+
+	//decryptedtext_len =decrypt((unsigned char *)ciphertext, buf , (count*recvtype_sz+12));
+    
+	//wrapper_decrypt( char *ciphertext ,  char *recvbuf, int datacount+tagsize, unsigned long key_size, unsigned char *key, unsigned char *nonce)
+	wrapper_decrypt( ciphertext_recv+12 ,  buf, (recvtype_sz*count)+12, key_size, gcm_key,ciphertext_recv);
+	 
+
+    //MPIU_Free(ciphertext);
+	
+    return mpi_errno;
+}
+
 #endif
 
 

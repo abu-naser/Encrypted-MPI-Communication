@@ -25,8 +25,8 @@
 //#define ENC_LIBRARY_NAME 2 //ENC_LIBRARY_TYPE
 #define BORINGSSL_LIB 0 //BORING_LIB   
 #define OPENSSL_LIB   0 //OPEN_LIB
-#define LIBSODIUM_LIB 1 //SOIDUM_LIB
-#define CRYPTOPP_LIB  0 //CRYPTO_LIB
+#define LIBSODIUM_LIB 0 //SOIDUM_LIB
+#define CRYPTOPP_LIB  1 //CRYPTO_LIB
 
 #if BORINGSSL_LIB
 #include <openssl/evp.h>
@@ -63,6 +63,20 @@ extern int isendCounter;
 // to generate nonce
 extern int nonceCounter; 
 #elif  CRYPTOPP_LIB
+#define NON_BLOCKING_SEND_RECV_SIZE 500 
+#define NON_BLOCKING_SEND_RECV_SIZE_2  2100000
+
+extern unsigned char Ideciphertext[NON_BLOCKING_SEND_RECV_SIZE][NON_BLOCKING_SEND_RECV_SIZE_2];
+extern unsigned char * bufptr[50000];
+extern unsigned char gcm_key[32];
+
+// to handle irecv
+extern int reqCounter;
+extern int waitCounter;
+extern int isendCounter;
+// to generate nonce
+extern int nonceCounter;  
+extern unsigned long key_size;   
 #endif
 
 

@@ -17,6 +17,9 @@ unsigned char Ideciphertext[NON_BLOCKING_SEND_RECV_SIZE][NON_BLOCKING_SEND_RECV_
 unsigned char * bufptr[100000];
 int reqCounter = 0;
 #elif ( CRYPTOPP_LIB)
+unsigned char Ideciphertext[NON_BLOCKING_SEND_RECV_SIZE][NON_BLOCKING_SEND_RECV_SIZE_2];
+unsigned char * bufptr[50000];
+int reqCounter = 0;
 #endif
 
 /* -- Begin Profiling Symbol Block for routine MPI_Irecv */
@@ -247,6 +250,37 @@ return mpi_errno;
 
 }
 #elif ( CRYPTOPP_LIB)
+/* This implementation is for variable nonce */
+int MPI_SEC_Irecv(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Request *request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int var;
+    int i;
+
+
+    unsigned long long ciphertext_len;
+    MPI_Status status;
+    MPI_Request req; 
+
+    int  recvtype_sz=0;           
+    MPI_Type_size(datatype, &recvtype_sz);
+    MPID_Comm *comm_ptr = NULL;
+    MPID_Comm_get_ptr( comm, comm_ptr );
+    int rank;
+    rank = comm_ptr->rank; 
+ 
+    mpi_errno=MPI_Irecv(&Ideciphertext[reqCounter][0], (recvtype_sz*count+12+12), MPI_CHAR, source, tag, comm, &req);
+    * request = req;
+    bufptr[reqCounter]=buf;
+    reqCounter++;
+    if(reqCounter == (NON_BLOCKING_SEND_RECV_SIZE-1))
+        reqCounter=0;
+
+return mpi_errno;
+
+}
+
 #endif
 
 /* fixed nonce */

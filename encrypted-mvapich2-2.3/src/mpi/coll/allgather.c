@@ -26,6 +26,9 @@ unsigned char ciphertext_recvbuf[268435456+4000]; // 268435456 = 4MB * 64
 unsigned char ciphertext_sendbuf[268435456+4000]; // 268435456 = 4MB * 64
 //unsigned char nonce[12] = {'1','2','3','4','5','6','7','8','9','0','1','2'};
 #elif ( CRYPTOPP_LIB)
+unsigned char ciphertext_sendbuf[4194304*2+200];
+unsigned char ciphertext_recvbuf[268435456+4000]; // 268435456 = 4MB * 64
+//unsigned char nonce[12] = {'1','2','3','4','5','6','7','8','9','0','1','2'};
 #endif
 #ifdef _OSU_MVAPICH_
 #include "coll_shmem.h"
@@ -1185,4 +1188,76 @@ int MPI_SEC_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
    return mpi_errno;
 }
 #elif ( CRYPTOPP_LIB)
+int MPI_SEC_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                  MPI_Comm comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Comm *comm_ptr = NULL;
+	int var;
+	
+    int sendtype_sz, recvtype_sz;
+    unsigned long long ciphertext_sendbuf_len = 0;
+    sendtype_sz= recvtype_sz= 0;
+
+    var=MPI_Type_size(sendtype, &sendtype_sz);
+    var=MPI_Type_size(recvtype, &recvtype_sz);
+
+    MPID_Comm_get_ptr( comm, comm_ptr);
+	int rank;
+	rank = comm_ptr->rank;
+
+    /* Set the nonce in send_ciphertext */
+    wrapper_nonce(ciphertext_sendbuf, 12);
+    
+    /* nonceCounter++;
+    memset(ciphertext_sendbuf, 0, 8);
+    ciphertext_sendbuf[8] = (nonceCounter >> 24) & 0xFF;
+    ciphertext_sendbuf[9] = (nonceCounter >> 16) & 0xFF;
+    ciphertext_sendbuf[10] = (nonceCounter >> 8) & 0xFF;
+    ciphertext_sendbuf[11] = nonceCounter & 0xFF; */
+	
+	unsigned long long t=0;
+    t = (unsigned long long)(sendtype_sz*sendcount);
+    
+    
+    /* var = crypto_aead_aes256gcm_encrypt_afternm(ciphertext_sendbuf+12, &ciphertext_sendbuf_len,
+            sendbuf, t,
+            NULL, 0,
+            NULL, ciphertext_sendbuf, (const crypto_aead_aes256gcm_state *) &ctx);
+
+    if(var != 0)
+            printf("Encryption failed\n");fflush(stdout);           */
+                  
+				  
+	//wrapper_encrypt( char *sendbuf ,  char *ciphertext , int datacount, unsigned long key_size, unsigned char *key, unsigned char *nonce)
+	wrapper_encrypt( sendbuf ,  ciphertext_sendbuf+12 , sendtype_sz*sendcount, key_size, gcm_key, ciphertext_sendbuf);
+	
+    mpi_errno=MPI_Allgather(ciphertext_sendbuf, sendtype_sz*sendcount+12+12, MPI_CHAR,
+                  ciphertext_recvbuf, ((recvcount*recvtype_sz) + 12 + 12), MPI_CHAR, comm);
+
+ 
+  unsigned long long count=0;
+    unsigned int next, dest;
+    unsigned int i;
+    for( i = 0; i < comm_ptr->local_size; i++){
+        next =(unsigned long long)(i*((recvcount*recvtype_sz) + 12 +12)); // added 12 for nonce
+        dest =(unsigned long long)(i*(recvcount*recvtype_sz));
+       
+        /* var = crypto_aead_aes256gcm_decrypt_afternm(((recvbuf+dest)), &count,
+                                  NULL,
+                                  (ciphertext_recvbuf+next+12), (unsigned long long)((recvcount*recvtype_sz)+16),
+                                  NULL,
+                                  0,
+                                  (ciphertext_recvbuf+next),(const crypto_aead_aes256gcm_state *) &ctx); */
+        
+		//wrapper_decrypt( char *ciphertext ,  char *recvbuf, int datacount+tagsize, unsigned long key_size, unsigned char *key, unsigned char *nonce)
+		
+		wrapper_decrypt( ciphertext_recvbuf+next+12 ,  recvbuf+dest, (recvtype_sz*recvcount)+12, key_size, gcm_key,ciphertext_recvbuf+next);
+    }
+    
+   
+  
+   return mpi_errno;
+}
 #endif
