@@ -11,6 +11,8 @@ unsigned char alltoall_ciphertext_sendbuf[268435456+4000]; // 268435456 = 4MB * 
 unsigned char alltoall_ciphertext_recvbuf[268435456+4000]; // 268435456 = 4MB * 64
 #elif ( OPENSSL_LIB)
 #elif ( LIBSODIUM_LIB)
+unsigned char alltoall_ciphertext_sendbuf[268435456+4000]; // 268435456 = 4MB * 64
+unsigned char alltoall_ciphertext_recvbuf[268435456+4000]; // 268435456 = 4MB * 64
 #elif ( CRYPTOPP_LIB)
 #endif
 
@@ -824,5 +826,83 @@ int MPI_SEC_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 }
 #elif ( OPENSSL_LIB)
 #elif ( LIBSODIUM_LIB)
+/* This implementation is using variable nonce */
+int MPI_SEC_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                  MPI_Comm comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Comm *comm_ptr = NULL;
+	int var;
+	
+    int sendtype_sz, recvtype_sz;
+    unsigned long long ciphertext_sendbuf_len = 0;
+    sendtype_sz= recvtype_sz= 0;
+
+    var=MPI_Type_size(sendtype, &sendtype_sz);
+    var=MPI_Type_size(recvtype, &recvtype_sz);
+
+    MPID_Comm_get_ptr( comm, comm_ptr);
+	int rank;
+	rank = comm_ptr->rank;
+
+	unsigned long long count=0;
+    unsigned int next, dest;
+	unsigned long long t=0;
+    t = (unsigned long long)(sendtype_sz*sendcount);
+    //printf("t=%llu ciphertext_sendbuf_len=%llu\n",t,ciphertext_sendbuf_len);
+	unsigned int j;
+    for( j = 0; j < comm_ptr->local_size; j++){
+        next =(unsigned long long)(j*(sendcount*sendtype_sz));
+        dest =(unsigned long long)(j*((sendcount*sendtype_sz)+16+12));
+
+        /* Set the nonce in send_ciphertext */
+        randombytes_buf(&alltoall_ciphertext_sendbuf[dest], 12);
+        
+        /*nonceCounter++;
+        memset(&alltoall_ciphertext_sendbuf[dest], 0, 8);
+        alltoall_ciphertext_sendbuf[dest+8] = (nonceCounter >> 24) & 0xFF;
+        alltoall_ciphertext_sendbuf[dest+9] = (nonceCounter >> 16) & 0xFF;
+        alltoall_ciphertext_sendbuf[dest+10] = (nonceCounter >> 8) & 0xFF;
+        alltoall_ciphertext_sendbuf[dest+11] = nonceCounter & 0xFF;*/
+        
+        var = crypto_aead_aes256gcm_encrypt_afternm((alltoall_ciphertext_sendbuf+dest+12), &ciphertext_sendbuf_len,
+            sendbuf+next, t,
+            NULL, 0,
+            NULL, alltoall_ciphertext_sendbuf+dest, (const crypto_aead_aes256gcm_state *) &ctx);
+        if(var != 0)
+            printf("Encryption failed\n");fflush(stdout);      
+         //printf(":: rank=%d will send %u bytes, status=%d \n", comm_ptr->rank, ciphertext_sendbuf_len, var); fflush(stdout);    
+     }        
+               
+   // printf(":: rank=%d will send %u bytes, status=%d \n", comm_ptr->rank, ciphertext_sendbuf_len, var); fflush(stdout);
+    
+   //unsigned long long procees_number = (unsigned long long )comm_ptr->local_size;
+    //unsigned long long cipher_length = ciphertext_sendbuf_len * procees_number;
+    mpi_errno=MPI_Alltoall(alltoall_ciphertext_sendbuf, ciphertext_sendbuf_len+12, MPI_CHAR,
+                  alltoall_ciphertext_recvbuf, ((recvcount*recvtype_sz) + 16 +12), MPI_CHAR, comm);
+
+ 
+ 
+    unsigned int i;
+    for( i = 0; i < comm_ptr->local_size; i++){
+        next =(unsigned long long)(i*((recvcount*recvtype_sz) + 16 + 12));
+        dest =(unsigned long long)(i*(recvcount*recvtype_sz));
+       // printf("next=%llu dest=%llu\n",next,dest);fflush(stdout);
+        var = crypto_aead_aes256gcm_decrypt_afternm(((recvbuf+dest)), &count,
+                                  NULL,
+                                  (alltoall_ciphertext_recvbuf+next+12), (unsigned long long)((recvcount*recvtype_sz)+16),
+                                  NULL,
+                                  0,
+                                  (alltoall_ciphertext_recvbuf+next),(const crypto_aead_aes256gcm_state *) &ctx);
+        if(var != 0)
+            printf("Decryption failed\n");fflush(stdout);  
+        //printf(":: rank=%d receive %llu bytes, status=%d %02x\n", comm_ptr->rank, count, var, *((unsigned char *)(recvbuf+ dest))); fflush(stdout);
+    }
+    
+   
+   return mpi_errno;
+}
+
 #elif ( CRYPTOPP_LIB)
 #endif
