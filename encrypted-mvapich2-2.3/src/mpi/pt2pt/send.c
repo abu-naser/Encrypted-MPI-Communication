@@ -281,7 +281,7 @@ void openssl_enc_core(unsigned char *send_ciphertext , unsigned long long src,co
 
 }
 
-int MPI_SEC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm , int max_pack)
+int MPI_SEC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
 	int world_rank;

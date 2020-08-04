@@ -259,7 +259,7 @@ void openssl_dec_core(unsigned char * ciphertext_recv, unsigned long long src,
     if (!(EVP_DecryptFinal_ex(ctx_dec, (recvbuf+dest+outlen_dec), &outlen_dec) > 0)) printf("Tag Verify Failed!\n");
 }
 
-int MPI_SEC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status , int max_pack)
+int MPI_SEC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status)
 {    
 	
 	//const unsigned char gcm_key[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
