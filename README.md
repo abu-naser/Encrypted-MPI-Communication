@@ -142,21 +142,77 @@ make install
 
 
 #### Encrypted-MPICH installation (Ethernet)
-Steps: 
+
+Steps:
+Configure and install with BoringSSL:
 ```bash
-tar -xvzf encrypted-mpich-3.2.1.tar.gz
 cd encrypted-mpich-3.2.1
 ./autogen.sh
-./configure --prefix=/MPICH_INSTALL_DIR/install 
+./configure --prefix=/MPICH_INSTALL_DIR/install  --with-enc-lib=libboringssl
 ```
 In the *Makefile* add -L/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/boringssl-master/build/crypto -lcrypto in *LIBS*
 
-(e.g. LIBS = -L/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/boringssl-master/build/crypto -lcrypto -lpthread )
+(e.g. LIBS =-L/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/boringssl-master/build/crypto -lcrypto -libmad -lrdmacm -libumad -libverbs -ldl -lrt -lm -lpthread)
 
-And also add -I/YOUR_PATH_TO_MVAPICH/encrypted-mpich-3.2.1/boringssl-master/include in *CFLAGS*
- 
+And also add -I/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/boringssl-master/include in *CFLAGS*
+
 ```bash
 export LD_LIBRARY_PATH=/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/boringssl-master/build/crypto
+make clean
+make -j
+make install
+```
+
+Configure and install with OpenSSL:
+```bash
+cd encrypted-mpich-3.2.1
+./autogen.sh
+./configure --prefix=/MPICH_INSTALL_DIR/install  --with-enc-lib=libopenssl
+```
+In the *Makefile* add -L/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/openssl-1.1.1/openssl_install/lib -lcrypto in *LIBS*
+
+(e.g. LIBS =-L/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/openssl-1.1.1/openssl_install/lib -lcrypto -libmad -lrdmacm -libumad -libverbs -ldl -lrt -lm -lpthread)
+
+And also add -I/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/openssl-1.1.1/openssl_install/include in *CFLAGS*
+
+```bash
+export LD_LIBRARY_PATH=/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/openssl-1.1.1/openssl_install/lib
+make clean
+make -j
+make install
+```
+
+Configure and install with Libsodium:
+```bash
+cd encrypted-mpich-3.2.1
+./autogen.sh
+./configure --prefix=/MPICH_INSTALL_DIR/install  --with-enc-lib=libsodium
+```
+In the *Makefile* add -L/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/libsodium-stable/libsodium_install/lib -lsodium in *LIBS*
+
+(e.g. LIBS =-L/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/libsodium-stable/libsodium_install/lib -lsodium -libmad -lrdmacm -libumad -libverbs -ldl -lrt -lm -lpthread)
+
+And also add -I/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/libsodium-stable/libsodium_install/include in *CFLAGS*
+
+```bash
+export LD_LIBRARY_PATH=/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/libsodium-stable/libsodium_install/lib
+make clean
+make -j
+make install
+```
+
+Configure and install with CryptoPP:
+```bash
+cd encrypted-mpich-3.2.1
+./autogen.sh
+./configure --prefix=/MPICH_INSTALL_DIR/install  --with-enc-lib=libcryptopp
+```
+In the *Makefile* add -L/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/cryptopp/install/lib -lcryptopp in *LIBS*
+
+(e.g. LIBS =-L/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/cryptopp/install/lib -lcryptopp -libmad -lrdmacm -libumad -libverbs -ldl -lrt -lm -lpthread)
+
+```bash
+export LD_LIBRARY_PATH=/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/cryptopp/install/lib
 make clean
 make -j
 make install
@@ -170,14 +226,12 @@ To run MPI applications using CryptMPI please follow following steps:
 export LD_LIBRARY_PATH=/MVAPICH_INSTALL_DIR/install/lib:/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/boringssl-master/build/crypto
 
 /MVAPICH_INSTALL_DIR/install/mpiexec -n 2 -f host ./pingpong
-/MVAPICH_INSTALL_DIR/install/mpiexec -n 64 -f host ./stencil 8 8 128 128 2 1000 0
 ```
 
 #### Encrypted-MPICH (Ethernet)
 ```bash
 export LD_LIBRARY_PATH=/MPICH_INSTALL_DIR/install/lib:/YOUR_PATH_TO_MPICH/encrypted-mpich-3.2.1/boringssl-master/build/crypto
 /MPICH_INSTALL_DIR/install/mpiexec -n 2 -f host ./pingpong
-/MPICH_INSTALL_DIR/install/mpiexec -n 64 -f host ./stencil 8 8 128 128 2 1000 0
 ```
 
 
