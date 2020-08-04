@@ -41,8 +41,7 @@ int main(int argc, char **argv)
 	recvbuf = (char *)malloc(sz * sizeof(char));
 
 	/* init key */
-        init_crypto(); 		// libsodium
-	//init_boringssl_256();    // boringssl
+        init_crypto(); 
 
 	memset(sendbuf, 'a', 4194304);
 	memset(recvbuf, 'b', 4194304);
