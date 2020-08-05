@@ -146,6 +146,7 @@ make install
 Steps:
 Configure and install with BoringSSL:
 ```bash
+tar xf encrypted-mpich-3.2.1.tar.xz
 cd encrypted-mpich-3.2.1
 ./autogen.sh
 ./configure --prefix=/MPICH_INSTALL_DIR/install  --with-enc-lib=libboringssl
@@ -165,6 +166,7 @@ make install
 
 Configure and install with OpenSSL:
 ```bash
+tar xf encrypted-mpich-3.2.1.tar.xz
 cd encrypted-mpich-3.2.1
 ./autogen.sh
 ./configure --prefix=/MPICH_INSTALL_DIR/install  --with-enc-lib=libopenssl
@@ -184,6 +186,7 @@ make install
 
 Configure and install with Libsodium:
 ```bash
+tar xf encrypted-mpich-3.2.1.tar.xz
 cd encrypted-mpich-3.2.1
 ./autogen.sh
 ./configure --prefix=/MPICH_INSTALL_DIR/install  --with-enc-lib=libsodium
@@ -203,6 +206,7 @@ make install
 
 Configure and install with CryptoPP:
 ```bash
+tar xf encrypted-mpich-3.2.1.tar.xz
 cd encrypted-mpich-3.2.1
 ./autogen.sh
 ./configure --prefix=/MPICH_INSTALL_DIR/install  --with-enc-lib=libcryptopp
@@ -220,7 +224,7 @@ make install
 
 
 ## Usage
-To run MPI applications using CryptMPI please follow following steps:
+To run MPI applications using CryptMPI please follow following steps for BoringSSL:
 #### Encrypted-MVAPICH (Infiniband)
 ```bash
 export LD_LIBRARY_PATH=/MVAPICH_INSTALL_DIR/install/lib:/YOUR_PATH_TO_MVAPICH/encrypted-mvapich2-2.3/boringssl-master/build/crypto
